@@ -19,8 +19,21 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # REAL_API_KEY = "실제_공공데이터_API_키"
 # OWNER_EMAIL = "altjr1643@gmail.com"
 
-REAL_API_KEY = st.secrets.get("REAL_API_KEY", "")
-OWNER_EMAIL = st.secrets.get("OWNER_EMAIL", "altjr1643@gmail.com")
+def get_secret(name: str, default: str = "") -> str:
+    """
+    1순위: st.secrets[name] (로컬 .streamlit/secrets.toml, Streamlit Cloud)
+    2순위: 환경변수 (Render, 기타 서버)
+    3순위: 기본값
+    """
+    try:
+        if name in st.secrets:
+            return st.secrets[name]
+    except Exception:
+        pass
+    return os.environ.get(name, default)
+
+REAL_API_KEY = get_secret("REAL_API_KEY", "")
+OWNER_EMAIL = get_secret("OWNER_EMAIL", "altjr1643@gmail.com")
 
 # ==========================================
 # 1. 공통 디자인 (CSS)
