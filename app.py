@@ -337,8 +337,8 @@ HTML_PAGE = r"""<!DOCTYPE html>
     <section id="app-section" class="py-24 bg-white">
         <div class="max-w-6xl mx-auto px-4">
             <div class="text-center mb-16">
-                <h2 class="text-2xl md:text-3xl font-black text-slate-900 mb-3">위너스케치가 준비한 "추천 공모 리스트"를 통해</h2>
-                <p class="text-xl md:text-2xl font-bold text-slate-900">새로운 공모들을 만나보세요.</p>
+                <h2 class="text-2xl md:text-3xl font-black text-slate-900 mb-3">3D 전문 모델링 지원이 필요한 설계공모 리스트를</h2>
+                <p class="text-xl md:text-2xl font-bold text-slate-900">검색하고 위너스케치의 작업 견적을 확인해보세요.</p>
             </div>
 
             <!-- Tabs -->
