@@ -431,7 +431,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
             
             <div class="flex justify-center gap-4 mb-16">
                 <button onclick="switchTab('search'); document.getElementById('app-section').scrollIntoView({behavior: 'smooth'})" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full font-bold text-sm transition">
-                    다시 검색하기
+                    포트폴리오
                 </button>
                 <a href="mailto:altjr1643@gmail.com" class="px-6 py-3 bg-slate-900 hover:bg-black text-white rounded-full font-bold text-sm transition">
                     문의하기
