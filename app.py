@@ -408,12 +408,17 @@ HTML_PAGE = r"""<!DOCTYPE html>
         </div>
     </footer>
 
-    <div id="pricing-modal" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
-        <div class="bg-white rounded-3xl w-full max-w-6xl my-8 relative shadow-2xl">
-            <button onclick="document.getElementById('pricing-modal').classList.add('hidden')" class="absolute top-6 right-6 text-slate-300 hover:text-slate-800 text-2xl w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            <div class="p-8 md:p-12">
+    <div id="pricing-modal" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-6xl relative shadow-2xl flex flex-col max-h-[90vh]">
+            
+            <div class="flex justify-end p-4 md:p-6 border-b border-slate-100 shrink-0 sticky top-0 bg-white rounded-t-3xl z-10">
+                <button onclick="document.getElementById('pricing-modal').classList.add('hidden')" 
+                    class="text-slate-300 hover:text-slate-800 text-3xl w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-6 md:p-12 overflow-y-auto">
                 <div class="text-center mb-12">
                     <h3 id="modal-title" class="text-2xl md:text-3xl font-black text-slate-900 mb-3 break-keep">공모전 제목</h3>
                     <div class="flex items-center justify-center gap-2 text-slate-500">
@@ -421,21 +426,22 @@ HTML_PAGE = r"""<!DOCTYPE html>
                         <span id="modal-fee" class="font-bold text-slate-800 text-lg">0원</span>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="price-card border border-slate-100 rounded-2xl p-8 text-center">
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-4">
+                    <div class="price-card border border-slate-100 rounded-2xl p-8 text-center bg-white">
                         <h4 class="text-lg font-bold text-slate-900 mb-1">BASIC</h4>
                         <div id="price-basic" class="text-3xl font-black text-blue-600 mb-2 font-mono">0원</div>
                         <p class="text-xs text-slate-400 mb-8">실속형 패키지 (80%)</p>
                         <a id="link-basic" href="#" target="_blank" class="block w-full py-4 bg-slate-50 text-slate-900 font-bold rounded-xl hover:bg-slate-100 transition border border-slate-200">선택하기</a>
                     </div>
-                    <div class="price-card border-2 border-red-500 bg-white rounded-2xl p-8 text-center shadow-xl transform md:-translate-y-4">
+                    <div class="price-card border-2 border-red-500 bg-white rounded-2xl p-8 text-center shadow-xl md:-translate-y-4">
                         <div class="text-red-500 text-xs font-bold mb-2 uppercase">👑 Premium</div>
                         <h4 class="text-lg font-bold text-red-500 mb-1">PREMIUM</h4>
                         <div id="price-premium" class="text-3xl font-black text-red-500 mb-2 font-mono">0원</div>
                         <p class="text-xs text-red-400 mb-8">표준형 패키지 (100%)</p>
                         <a id="link-premium" href="#" target="_blank" class="block w-full py-4 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition">선택하기</a>
                     </div>
-                    <div class="price-card border border-slate-100 rounded-2xl p-8 text-center">
+                    <div class="price-card border border-slate-100 rounded-2xl p-8 text-center bg-white">
                         <h4 class="text-lg font-bold text-slate-900 mb-1">EXPRESS</h4>
                         <div id="price-express" class="text-3xl font-black text-blue-600 mb-2 font-mono">0원</div>
                         <p class="text-xs text-slate-400 mb-8">긴급형 패키지 (120%)</p>
@@ -443,6 +449,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     </div>
                 </div>
             </div>
+            
         </div>
     </div>
 
