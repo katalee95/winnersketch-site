@@ -739,6 +739,7 @@ def api_search():
 
 @app.get("/api/recommend")
 def api_recommend():
+    # ... (min_fee, max_fee 파라미터 파싱 부분 생략) ...
     try:
         min_fee = int(request.args.get("min", "0") or 0)
     except ValueError:
@@ -749,7 +750,7 @@ def api_recommend():
     except ValueError:
         max_fee = 999999999999
 
-    # 1. 나라장터 데이터 수집 (strict_mode=True)
+    # 1. 나라장터 데이터 수집 (기존 로직)
     keywords = ["건축설계", "설계공모", "실시설계", "리모델링"]
     merged = []
     seen = set()
@@ -765,25 +766,25 @@ def api_recommend():
                 continue
             merged.append(item)
 
-    # 2. 수동 데이터(MANUAL_DATA) 합치기
+    # ✅ [추가됨] 2. 수동 데이터(MANUAL_DATA) 합치기
     for item in MANUAL_DATA:
         uid = f"{item['title']}_{item['agency']}"
+        
+        # 이미 리스트에 있으면 패스
         if uid in seen:
             continue
         
+        # 금액 필터링 적용 (범위에 안 맞으면 패스)
         if not (min_fee <= item["fee"] <= max_fee):
             continue
             
         merged.append(item)
         seen.add(uid)
 
+    # 정렬 및 반환
     merged.sort(
         key=lambda x: x["deadline"] if x["deadline"] != "-" else "0000-00-00",
         reverse=False,
     )
 
     return jsonify({"items": merged})
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=False)
