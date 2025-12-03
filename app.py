@@ -1453,6 +1453,17 @@ def contact_request():
         print(f"[ERROR] 문의 요청 실패: {e}")
         return jsonify({"success": False, "msg": str(e)})
 
+# 🏥 Health Check 엔드포인트 (UptimeRobot용 - Sleep 방지)
+@app.get("/health")
+def health_check():
+    """핑 서비스용 헬스체크 엔드포인트"""
+    return jsonify({
+        "status": "ok",
+        "timestamp": datetime.now().isoformat(),
+        "message": "Server is alive! 🚀"
+    })
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
+    
+    
