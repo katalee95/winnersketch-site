@@ -303,15 +303,24 @@ HTML_PAGE = r"""<!DOCTYPE html>
 
     <nav class="w-full py-5 px-6 flex justify-between items-center bg-white sticky top-0 z-50 border-b border-slate-100">
         <div class="max-w-7xl mx-auto w-full flex justify-between items-center">
-            <div class="text-2xl font-black text-slate-900 tracking-tighter cursor-pointer" onclick="window.scrollTo(0,0)">
+            <div class="text-2xl font-black text-slate-900 tracking-tighter cursor-pointer" onclick="switchToHome()">
                 WINNERSKETCH
             </div>
-            <a href="javascript:void(0)" onclick="openContactModal()" class="text-sm font-bold text-slate-500 hover:text-blue-600 transition">
-                문의하기
-            </a>
+            <div class="flex items-center gap-8">
+                <a href="#" onclick="switchToHome(); return false;" class="text-sm font-bold text-slate-500 hover:text-blue-600 transition">
+                    홈
+                </a>
+                <a href="#" onclick="switchToPortfolio(); return false;" class="text-sm font-bold text-slate-500 hover:text-blue-600 transition">
+                    포트폴리오
+                </a>
+                <a href="javascript:void(0)" onclick="openContactModal()" class="text-sm font-bold text-slate-500 hover:text-blue-600 transition">
+                    문의하기
+                </a>
+            </div>
         </div>
     </nav>
 
+    <div id="home-section">
     <section class="pt-24 pb-32 px-4 text-center bg-white">
         <div class="max-w-5xl mx-auto">
             <p class="text-lg md:text-xl font-bold text-slate-500 mb-6 tracking-tight">현상설계 스케치업의 모든 것</p>
@@ -459,6 +468,119 @@ HTML_PAGE = r"""<!DOCTYPE html>
             </div>
         </div>
     </footer>
+    </div>
+
+    <div id="portfolio-section" class="hidden">
+        <section class="pt-20 pb-20 px-4 bg-white">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16">
+                    <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-4">포트폴리오</h1>
+                    <p class="text-lg text-slate-600">위너스케치의 실제 작업 사례들을 소개합니다</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Portfolio Item 1 -->
+                    <div class="group bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition">
+                        <div class="h-48 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                            <i class="fa-solid fa-image text-white text-6xl opacity-20"></i>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-black text-slate-900 mb-2">현상설계 프로젝트 1</h3>
+                            <p class="text-sm text-slate-600 mb-4">건축 현상설계 스케치업 모델링 작업</p>
+                            <div class="flex items-center gap-2 text-xs text-slate-500">
+                                <i class="fa-solid fa-calendar"></i>
+                                <span>2024년</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Portfolio Item 2 -->
+                    <div class="group bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition">
+                        <div class="h-48 bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
+                            <i class="fa-solid fa-image text-white text-6xl opacity-20"></i>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-black text-slate-900 mb-2">현상설계 프로젝트 2</h3>
+                            <p class="text-sm text-slate-600 mb-4">3D 렌더링 및 프레젠테이션 작업</p>
+                            <div class="flex items-center gap-2 text-xs text-slate-500">
+                                <i class="fa-solid fa-calendar"></i>
+                                <span>2024년</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Portfolio Item 3 -->
+                    <div class="group bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition">
+                        <div class="h-48 bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                            <i class="fa-solid fa-image text-white text-6xl opacity-20"></i>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-black text-slate-900 mb-2">현상설계 프로젝트 3</h3>
+                            <p class="text-sm text-slate-600 mb-4">도시설계 및 마스터플랜 작업</p>
+                            <div class="flex items-center gap-2 text-xs text-slate-500">
+                                <i class="fa-solid fa-calendar"></i>
+                                <span>2024년</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Portfolio Item 4 -->
+                    <div class="group bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition">
+                        <div class="h-48 bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
+                            <i class="fa-solid fa-image text-white text-6xl opacity-20"></i>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-black text-slate-900 mb-2">현상설계 프로젝트 4</h3>
+                            <p class="text-sm text-slate-600 mb-4">상세 설계 및 시각화 작업</p>
+                            <div class="flex items-center gap-2 text-xs text-slate-500">
+                                <i class="fa-solid fa-calendar"></i>
+                                <span>2024년</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Portfolio Item 5 -->
+                    <div class="group bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition">
+                        <div class="h-48 bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center">
+                            <i class="fa-solid fa-image text-white text-6xl opacity-20"></i>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-black text-slate-900 mb-2">현상설계 프로젝트 5</h3>
+                            <p class="text-sm text-slate-600 mb-4">인테리어 설계 및 공간 계획</p>
+                            <div class="flex items-center gap-2 text-xs text-slate-500">
+                                <i class="fa-solid fa-calendar"></i>
+                                <span>2024년</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Portfolio Item 6 -->
+                    <div class="group bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition">
+                        <div class="h-48 bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center">
+                            <i class="fa-solid fa-image text-white text-6xl opacity-20"></i>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-black text-slate-900 mb-2">현상설계 프로젝트 6</h3>
+                            <p class="text-sm text-slate-600 mb-4">경관설계 및 조경 시각화</p>
+                            <div class="flex items-center gap-2 text-xs text-slate-500">
+                                <i class="fa-solid fa-calendar"></i>
+                                <span>2024년</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-16 text-center">
+                    <p class="text-slate-600 mb-6">더 많은 포트폴리오를 보고 싶으신가요?</p>
+                    <button onclick="openContactModal()" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded-full shadow-lg transition">
+                        <i class="fa-solid fa-envelope mr-2"></i>문의하기
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="home-section">
 
     <div id="pricing-modal" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl w-full max-w-6xl relative shadow-2xl flex flex-col max-h-[90vh]">
@@ -665,6 +787,18 @@ HTML_PAGE = r"""<!DOCTYPE html>
 
     <script>
         const OWNER_EMAIL = "winnersketch.kr@gmail.com";
+
+        function switchToHome() {
+            document.getElementById('home-section').classList.remove('hidden');
+            document.getElementById('portfolio-section').classList.add('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function switchToPortfolio() {
+            document.getElementById('home-section').classList.add('hidden');
+            document.getElementById('portfolio-section').classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
 
         function calculateFeesFrontend(fee) {
             let rate = 1.0;
