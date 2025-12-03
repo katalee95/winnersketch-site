@@ -4,7 +4,6 @@ import re
 import uuid
 import sqlite3
 import smtplib
-import time
 from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
 from urllib.parse import quote as url_quote
@@ -24,12 +23,11 @@ app = Flask(__name__)
 # 🔑 공공데이터포털 나라장터 API 키
 REAL_API_KEY = "7bab15bfb6883de78a3e2720338237530938fbeca5a7f4038ef1dfd0450dca48"
 
-# 📧 메일 서버 설정 (반드시 본인 계정으로 수정 필요)
-# 예시: 네이버웍스(smtp.worksmobile.com), 지메일(smtp.gmail.com)
-SMTP_SERVER = "smtp.worksmobile.com"  # 네이버웍스 기준
+# 📧 Gmail 설정 (변경됨)
+SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
-SMTP_USER = "contact@oskstudio.kr"  # 🔴 발송할 실제 이메일 주소 입력
-SMTP_PASSWORD = "Gozldgkwlak414800#"          # 🔴 이메일 비밀번호 (또는 앱 비밀번호)
+SMTP_USER = "winnersketch.kr@gmail.com"  # 🟢 새로 만드신 계정
+SMTP_PASSWORD = "ooedozuheenpwwxd"  # 🔴🔴🔴 (띄어쓰기 없이 입력하세요)
 
 # 💾 데이터베이스 파일명
 DB_FILE = "subscribers.db"
@@ -46,7 +44,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-# 앱 시작 시 DB 생성
 init_db()
 
 
@@ -55,7 +52,7 @@ init_db()
 # ==============================
 
 def send_email(to_email, subject, html_content):
-    """HTML 형식의 이메일 발송"""
+    """Gmail 발송 함수 (TLS 587 포트 사용)"""
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
@@ -65,11 +62,12 @@ def send_email(to_email, subject, html_content):
         part = MIMEText(html_content, "html")
         msg.attach(part)
 
-        # SMTP 연결 및 발송
+        # Gmail 접속 및 발송
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
+            server.starttls()  # 보안 연결 시작
             server.login(SMTP_USER, SMTP_PASSWORD)
             server.sendmail(SMTP_USER, to_email, msg.as_string())
+            
         print(f"[메일발송성공] {to_email}")
         return True
     except Exception as e:
@@ -179,7 +177,7 @@ def get_competition_data(keyword, rows=100, strict_mode=False, days=30):
         cleaned.append({
             "title": title, "agency": agency, "fee": price, 
             "notice_date": notice_date, "url": url_link,
-            "raw_date": notice_date_str[:8] # 정렬 및 비교용
+            "raw_date": notice_date_str[:8]
         })
 
     cleaned.sort(key=lambda x: x["notice_date"], reverse=True)
@@ -204,36 +202,31 @@ def job_send_daily_emails():
         conn.close()
         return
 
-    # 최근 2일치 데이터만 조회 (오늘, 어제)
+    # 최근 2일치 데이터만 조회
+    target_date_limit = (datetime.now() - timedelta(days=2)).strftime("%Y%m%d")
+    
     keywords = ["건축설계", "설계공모", "리모델링"]
     all_items = []
     seen_ids = set()
     
-    # 3일치 데이터를 긁어와서 날짜로 필터링
-    target_date_limit = (datetime.now() - timedelta(days=2)).strftime("%Y%m%d")
-
     for kw in keywords:
         items, _ = get_competition_data(kw, rows=50, strict_mode=True, days=3)
         for item in items:
             uid = f"{item['title']}_{item['agency']}"
-            # 공고일이 최근 2일 이내인 것만
             if item['raw_date'] >= target_date_limit and uid not in seen_ids:
                 seen_ids.add(uid)
                 all_items.append(item)
 
     print(f"수집된 최신 공고: {len(all_items)}건")
 
-    # 구독자별 필터링 및 발송
     for user in subscribers:
         user_items = []
         for item in all_items:
-            # 금액 조건 확인
             if user['min_fee'] <= item['fee'] <= user['max_fee']:
                 user_items.append(item)
         
         if user_items:
             token = user['token']
-            # ※ 실제 운영시에는 localhost 대신 실제 도메인 입력
             manage_link = f"http://localhost:8000/manage/{token}"
             
             html_body = f"""
@@ -274,14 +267,13 @@ def job_send_daily_emails():
     conn.close()
     print("스케줄러 작업 완료")
 
-# 스케줄러 등록 (매일 08:30 실행)
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=job_send_daily_emails, trigger="cron", hour=8, minute=30)
 scheduler.start()
 
 
 # ==============================
-# 4. HTML 템플릿 (UI 업데이트)
+# 4. HTML 및 라우트
 # ==============================
 
 HTML_PAGE = r"""<!DOCTYPE html>
@@ -314,7 +306,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
             <div class="text-2xl font-black text-slate-900 tracking-tighter cursor-pointer" onclick="window.scrollTo(0,0)">
                 WINNERSKETCH
             </div>
-            <a href="mailto:altjr1643@gmail.com" class="text-sm font-bold text-slate-500 hover:text-blue-600 transition">
+            <a href="mailto:winnersketch.kr@gmail.com" class="text-sm font-bold text-slate-500 hover:text-blue-600 transition">
                 문의하기
             </a>
         </div>
@@ -410,7 +402,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
             <h3 class="text-2xl md:text-3xl font-black text-slate-900 mb-6">위너스케치에서 쉽고 합리적으로.</h3>
             <p class="mb-10 text-slate-500">건축 현상설계 당선을 위한 최적의 파트너</p>
             <div class="text-xs text-slate-400 border-t border-slate-100 pt-10">
-                <p class="mb-2">위너스케치 | 문의: altjr1643@gmail.com</p>
+                <p class="mb-2">위너스케치 | 문의: winnersketch.kr@gmail.com</p>
                 <p>Copyright © WinnerSketch. All rights reserved.</p>
             </div>
         </div>
@@ -493,9 +485,8 @@ HTML_PAGE = r"""<!DOCTYPE html>
     </div>
 
     <script>
-        const OWNER_EMAIL = "altjr1643@gmail.com";
+        const OWNER_EMAIL = "winnersketch.kr@gmail.com";
 
-        // --- 가격 계산 로직 (기존 유지) ---
         function calculateFeesFrontend(fee) {
             let rate = 1.0;
             let note = "기본 요율";
@@ -533,7 +524,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
             };
         }
 
-        // --- 탭 전환 ---
         function switchTab(tabName) {
             const searchContent = document.getElementById('content-search');
             const recoContent = document.getElementById('content-recommend');
@@ -554,7 +544,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
             }
         }
 
-        // --- 리스트 렌더링 ---
         function renderList(items, containerId) {
             const container = document.getElementById(containerId);
             container.innerHTML = "";
@@ -617,7 +606,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
             }
         }
 
-        // --- 견적 모달 ---
         function openPricingModal(title, fee) {
             const result = calculateFeesFrontend(fee);
             document.getElementById('modal-title').innerText = title;
@@ -638,9 +626,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
             document.getElementById('pricing-modal').classList.remove('hidden');
         }
 
-        // --- 구독 관련 기능 ---
         function openSubModal() {
-            // 추천 탭의 현재 필터 값을 모달에 기본값으로 세팅
             document.getElementById('subMin').value = document.getElementById('minFee').value;
             document.getElementById('subMax').value = document.getElementById('maxFee').value;
             document.getElementById('sub-modal').classList.remove('hidden');
@@ -661,7 +647,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
                 return;
             }
 
-            // UI 로딩 표시
             const btn = document.querySelector('#sub-modal button');
             const originalText = btn.innerText;
             btn.innerText = "처리 중...";
@@ -693,10 +678,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
 </html>
 """
 
-# ==============================
-# 5. Flask 라우트 정의
-# ==============================
-
 @app.route("/")
 def index():
     return Response(HTML_PAGE, mimetype="text/html")
@@ -721,7 +702,6 @@ def api_recommend():
     merged = []
     seen = set()
 
-    # 추천은 최신 200개 정도만 긁어서 필터링
     for kw in keywords:
         res, _ = get_competition_data(kw, rows=100, strict_mode=True, days=30)
         for item in res:
@@ -735,10 +715,6 @@ def api_recommend():
     return jsonify({"items": merged})
 
 
-# ------------------------------
-# 구독 관련 API
-# ------------------------------
-
 @app.post("/api/subscribe")
 def api_subscribe():
     data = request.json
@@ -750,13 +726,12 @@ def api_subscribe():
     if not email:
         return jsonify({"success": False, "msg": "이메일을 입력해주세요."})
     
-    token = str(uuid.uuid4()) # 고유 토큰 생성
+    token = str(uuid.uuid4())
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     try:
         conn = sqlite3.connect(DB_FILE)
         c = conn.cursor()
-        # 이미 존재하면 업데이트 (UPSERT)
         c.execute("""INSERT OR REPLACE INTO subscribers 
                      (email, min_fee, max_fee, token, marketing_agreed, created_at) 
                      VALUES (?, ?, ?, ?, ?, ?)""", 
@@ -764,7 +739,6 @@ def api_subscribe():
         conn.commit()
         conn.close()
         
-        # 환영 메일 발송
         manage_link = f"http://localhost:8000/manage/{token}"
         send_email(email, "[위너스케치] 구독이 완료되었습니다.", 
                    f"""
@@ -783,7 +757,6 @@ def api_subscribe():
 
 @app.get("/manage/<token>")
 def manage_page(token):
-    """구독 관리 페이지 (HTML 렌더링)"""
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
