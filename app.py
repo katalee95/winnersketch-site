@@ -17,6 +17,29 @@ app = Flask(__name__)
 #   - 당장은 하드코딩해두고, 나중에 환경변수로 빼는 걸 추천
 REAL_API_KEY = "7bab15bfb6883de78a3e2720338237530938fbeca5a7f4038ef1dfd0450dca48"  # <- 이 줄만 너 키로 바꾸기
 
+# ✅ [수동 데이터 추가] 프로젝트 서울 등 외부 공모전 데이터베이스
+# 이곳에 원하는 공모전을 계속 추가하면 추천 리스트에 자동으로 뜹니다.
+MANUAL_DATA = [
+    {
+        "title": "서리풀 보이는 수장고 국제설계공모",
+        "agency": "서울특별시",
+        "fee": 5800000000,  # 콤마 없이 숫자만
+        "deadline": "2025-12-31"
+    },
+    {
+        "title": "서울형 키즈카페 건립 설계공모",
+        "agency": "서울시",
+        "fee": 250000000,
+        "deadline": "2025-10-15"
+    },
+    {
+        "title": "노들섬 디자인 공모 (글로벌)",
+        "agency": "서울특별시 도시공간기획과",
+        "fee": 1500000000,
+        "deadline": "2025-11-20"
+    }
+]
+
 
 # ==============================
 # 2. 나라장터 API 유틸 함수
@@ -707,7 +730,6 @@ def index():
 @app.get("/api/search")
 def api_search():
     q = request.args.get("q", "").strip()
-    # q가 없으면 너무 많은 결과 나올 수 있으니, 한 번 더 방어
     if not q:
         return jsonify({"items": []})
 
@@ -727,7 +749,7 @@ def api_recommend():
     except ValueError:
         max_fee = 999999999999
 
-    # 여러 키워드로 수집 (원래 Streamlit reco 탭 로직과 유사)
+    # 1. 나라장터 데이터 수집 (strict_mode=True)
     keywords = ["건축설계", "설계공모", "실시설계", "리모델링"]
     merged = []
     seen = set()
@@ -743,6 +765,18 @@ def api_recommend():
                 continue
             merged.append(item)
 
+    # 2. 수동 데이터(MANUAL_DATA) 합치기
+    for item in MANUAL_DATA:
+        uid = f"{item['title']}_{item['agency']}"
+        if uid in seen:
+            continue
+        
+        if not (min_fee <= item["fee"] <= max_fee):
+            continue
+            
+        merged.append(item)
+        seen.add(uid)
+
     merged.sort(
         key=lambda x: x["deadline"] if x["deadline"] != "-" else "0000-00-00",
         reverse=False,
@@ -752,5 +786,4 @@ def api_recommend():
 
 
 if __name__ == "__main__":
-    # 로컬 테스트용
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    app.run(host="0.0.0.0", port=8000, debug=False)
