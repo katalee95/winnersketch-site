@@ -158,26 +158,17 @@ def get_competition_data(keyword, rows=100, strict_mode=False):
         except Exception:
             price = 0
 
-        # ========== [수정됨] 날짜 필드 다중 검색 및 파싱 강화 ==========
-        # 설계공모는 bidClseDt(입찰마감) 대신 referReqstDt(참가등록마감) 등에 날짜가 있는 경우가 많음
-        candidate_keys = ["bidClseDt", "referReqstDt", "thbidCcmlDt", "prpslSbmsnClseDt"]
-        
-        deadline_str = ""
-        for key in candidate_keys:
-            val = str(item.get(key, "") or "")
-            # 값이 존재하고 'null' 문자열이 아니면 채택
-            if val and val.lower() != "null" and len(val) > 5:
-                deadline_str = val
-                break
+        # ========== [수정됨] 공고일(bidNtceDt) 파싱 ==========
+        notice_date_str = str(item.get("bidNtceDt", "") or "")
         
         # 숫자만 추출 (2025/12/08 17:00 -> 202512081700)
-        deadline_digits = re.sub(r'[^0-9]', '', deadline_str)
+        notice_date_digits = re.sub(r'[^0-9]', '', notice_date_str)
         
-        if len(deadline_digits) >= 8:
-            deadline = f"{deadline_digits[0:4]}-{deadline_digits[4:6]}-{deadline_digits[6:8]}"
+        if len(notice_date_digits) >= 8:
+            notice_date = f"{notice_date_digits[0:4]}-{notice_date_digits[4:6]}-{notice_date_digits[6:8]}"
         else:
-            deadline = "-"
-        # ========================================================
+            notice_date = "-"
+        # ===================================================
 
         # 공고 URL 생성
         url_link = item.get("bidNtceDtlUrl", "") or item.get("bidNtceUrl", "")
@@ -190,15 +181,15 @@ def get_competition_data(keyword, rows=100, strict_mode=False):
                 "title": title,
                 "agency": agency,
                 "fee": price,
-                "deadline": deadline,
+                "notice_date": notice_date,  # 마감일 대신 공고일
                 "url": url_link,
             }
         )
 
-    # 마감일 기준 정렬
+    # 공고일 기준 정렬 (최신순)
     cleaned.sort(
-        key=lambda x: x["deadline"] if x["deadline"] != "-" else "0000-00-00",
-        reverse=False,
+        key=lambda x: x["notice_date"] if x["notice_date"] != "-" else "0000-00-00",
+        reverse=True,  # 최신 공고가 먼저 오도록
     )
 
     return cleaned, debug_logs
@@ -606,7 +597,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                             <p class="text-sm text-slate-500 font-medium flex items-center gap-2">
                                 <span>${item.agency}</span>
                                 <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
-                                <span>마감: ${item.deadline}</span>
+                                <span>공고일: ${item.notice_date}</span>
                             </p>
                             <p class="text-slate-900 font-extrabold mt-3 text-lg">💰 설계비: ${feeText}</p>
                         </div>
@@ -751,8 +742,8 @@ def api_recommend():
             merged.append(item)
 
     merged.sort(
-        key=lambda x: x["deadline"] if x["deadline"] != "-" else "0000-00-00",
-        reverse=False,
+        key=lambda x: x["notice_date"] if x["notice_date"] != "-" else "0000-00-00",
+        reverse=True,
     )
 
     return jsonify({"items": merged})
