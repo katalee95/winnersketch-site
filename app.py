@@ -329,14 +329,14 @@ HTML_PAGE = r"""<!DOCTYPE html>
             <div class="text-2xl font-black text-slate-900 tracking-tighter cursor-pointer" onclick="switchToHome()">
                 WINNERSKETCH
             </div>
-            <div class="flex items-center gap-8">
-                <a href="#" onclick="switchToHome(); return false;" class="text-sm font-bold text-slate-500 hover:text-blue-600 transition">
+            <div class="flex items-center gap-2 md:gap-8">
+                <a href="#" onclick="switchToHome(); return false;" class="text-xs md:text-sm font-bold text-slate-500 hover:text-blue-600 transition whitespace-nowrap">
                     홈
                 </a>
-                <a href="#" onclick="switchToPortfolio(); return false;" class="text-sm font-bold text-slate-500 hover:text-blue-600 transition">
+                <a href="#" onclick="switchToPortfolio(); return false;" class="text-xs md:text-sm font-bold text-slate-500 hover:text-blue-600 transition whitespace-nowrap">
                     포트폴리오
                 </a>
-                <a href="javascript:void(0)" onclick="openContactModal()" class="text-sm font-bold text-slate-500 hover:text-blue-600 transition">
+                <a href="javascript:void(0)" onclick="openContactModal()" class="text-xs md:text-sm font-bold text-slate-500 hover:text-blue-600 transition whitespace-nowrap">
                     문의하기
                 </a>
             </div>
@@ -347,8 +347,9 @@ HTML_PAGE = r"""<!DOCTYPE html>
     <section class="pt-24 pb-32 px-4 text-center bg-white">
         <div class="max-w-5xl mx-auto">
             <p class="text-lg md:text-xl font-bold text-slate-500 mb-6 tracking-tight">현상설계 스케치업의 모든 것</p>
-            <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-black text-slate-900 leading-tight mb-12 tracking-tight">
-                위너스케치에서 쉽고 합리적으로.
+            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 leading-tight mb-12 tracking-tight">
+                위너스케치에서<br class="hidden sm:block">
+                쉽고 합리적으로.
             </h1>
             <a href="#app-section" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold text-lg py-4 px-12 rounded-full shadow-lg hover:shadow-blue-200 transition transform hover:-translate-y-1">
                 견적 확인하러 가기
@@ -679,9 +680,9 @@ HTML_PAGE = r"""<!DOCTYPE html>
         </div>
     </div>
 
-    <div id="contact-modal" class="fixed inset-0 bg-black/60 z-[110] hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl w-full max-w-md p-8 relative shadow-2xl">
-            <button onclick="document.getElementById('contact-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
+    <div id="contact-modal" class="fixed inset-0 bg-black/60 z-[110] hidden flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
+        <div class="bg-white rounded-2xl w-full max-w-md p-8 relative shadow-2xl my-auto">
+            <button onclick="document.getElementById('contact-modal').classList.add('hidden')" class="sticky top-4 float-right text-slate-400 hover:text-slate-800">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
             <h3 class="text-2xl font-black text-slate-900 mb-2">💬 문의하기</h3>
@@ -717,9 +718,9 @@ HTML_PAGE = r"""<!DOCTYPE html>
         </div>
     </div>
 
-    <div id="quote-modal" class="fixed inset-0 bg-black/60 z-[110] hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl w-full max-w-md p-8 relative shadow-2xl">
-            <button onclick="document.getElementById('quote-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
+    <div id="quote-modal" class="fixed inset-0 bg-black/60 z-[110] hidden flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
+        <div class="bg-white rounded-2xl w-full max-w-md p-8 relative shadow-2xl my-auto">
+            <button onclick="document.getElementById('quote-modal').classList.add('hidden')" class="sticky top-4 float-right text-slate-400 hover:text-slate-800">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
             <h3 class="text-2xl font-black text-slate-900 mb-2">🎨 작업 요청</h3>
