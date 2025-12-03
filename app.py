@@ -315,13 +315,64 @@ HTML_PAGE = r"""<!DOCTYPE html>
     <section class="pt-24 pb-32 px-4 text-center bg-white">
         <div class="max-w-5xl mx-auto">
             <p class="text-lg md:text-xl font-bold text-slate-500 mb-6 tracking-tight">현상설계 스케치업의 모든 것</p>
-            <h1 class="text-4xl md:text-6xl font-black text-slate-900 leading-tight mb-12 tracking-tight whitespace-nowrap">
-                위너스케치에서
-                쉽고 합리적으로.
+            <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-black text-slate-900 leading-tight mb-12 tracking-tight">
+                위너스케치에서 쉽고 합리적으로.
             </h1>
             <a href="#app-section" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold text-lg py-4 px-12 rounded-full shadow-lg hover:shadow-blue-200 transition transform hover:-translate-y-1">
                 견적 확인하러 가기
             </a>
+        </div>
+    </section>
+
+
+    <!-- Quote -->
+    <section class="py-24 bg-white text-center">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-3">"현상설계는 소중한 투자입니다"</h2>
+            <p class="text-xl md:text-2xl font-medium text-slate-600">그 가치를 아는 파트너를 만나세요.</p>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="py-20 bg-slate-50/50">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="feature-card-hover bg-white p-10 rounded-[2rem] border border-slate-100 shadow-sm transition duration-300">
+                    <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 text-2xl mb-8 mx-auto">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-xl font-black text-slate-900 mb-4">효율적인 작업을<br>위한 최적의 파트너</h3>
+                        <p class="text-slate-500 leading-relaxed text-sm break-keep">
+                            1인 프리랜서의 기동성과 전문 업체의 시스템을 결합하여, 소장님의 소중한 시간을 아껴드립니다.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="feature-card-hover bg-white p-10 rounded-[2rem] border border-slate-100 shadow-sm transition duration-300">
+                    <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 text-2xl mb-8 mx-auto">
+                        <i class="fa-solid fa-chart-simple"></i>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-xl font-black text-slate-900 mb-4">데이터 기반의<br>투명한 견적</h3>
+                        <p class="text-slate-500 leading-relaxed text-sm break-keep">
+                            나라장터 공고 데이터와 프로젝트 규모를 기반으로 산출된, 가장 합리적이고 투명한 표준 가격을 제시합니다.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="feature-card-hover bg-white p-10 rounded-[2rem] border border-slate-100 shadow-sm transition duration-300">
+                    <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 text-2xl mb-8 mx-auto">
+                        <i class="fa-regular fa-lightbulb"></i>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-xl font-black text-slate-900 mb-4">설계를 완성시키는<br>전략</h3>
+                        <p class="text-slate-500 leading-relaxed text-sm break-keep">
+                            우리는 건축을 전공한 그래픽 디자이너입니다. 건축적 의도를 가장 잘 살린 '이기는 뷰'를 만듭니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -403,8 +454,8 @@ HTML_PAGE = r"""<!DOCTYPE html>
             <h3 class="text-2xl md:text-3xl font-black text-slate-900 mb-6">위너스케치에서 쉽고 합리적으로.</h3>
             <p class="mb-10 text-slate-500">건축 현상설계 당선을 위한 최적의 파트너</p>
             <div class="text-xs text-slate-400 border-t border-slate-100 pt-10">
-                <p class="mb-2">위너스케치 | 문의: winnersketch.kr@gmail.com</p>
-                <p>Copyright © WinnerSketch. All rights reserved.</p>
+                <p class="mb-2">오에스케이스튜디오 | 대표: 이주훈,황미석 | 사업자등록번호: 208-12-72095</p>
+                <p>문의: winnersketch.kr@gmail.com | Copyright © WinnerSketch. All rights reserved.</p>
             </div>
         </div>
     </footer>
@@ -429,28 +480,110 @@ HTML_PAGE = r"""<!DOCTYPE html>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-4">
-                    <div class="price-card border border-slate-100 rounded-2xl p-8 text-center bg-white">
+                    <div class="price-card border border-slate-100 rounded-2xl p-8 text-center relative bg-white hover:border-blue-200">
                         <h4 class="text-lg font-bold text-slate-900 mb-1">BASIC</h4>
                         <div id="price-basic" class="text-3xl font-black text-blue-600 mb-2 font-mono">0원</div>
-                        <p class="text-xs text-slate-400 mb-8">실속형 패키지 (80%)</p>
-                        <a id="link-basic" href="#" target="_blank" class="block w-full py-4 bg-slate-50 text-slate-900 font-bold rounded-xl hover:bg-slate-100 transition border border-slate-200">선택하기</a>
+                        <p class="text-xs text-slate-400 mb-8 font-medium">실속형 패키지</p>
+                        <div class="space-y-4 text-left text-sm text-slate-600 mb-10 pl-2">
+                            <div class="flex items-center"><i class="fa-solid fa-check text-blue-500 w-6"></i> <span>작업 기간: <b>2주</b></span></div>
+                            <div class="flex items-center"><i class="fa-solid fa-check text-blue-500 w-6"></i> <span>컷 장수: <b>총 5컷 이내</b></span></div>
+                            <div class="flex items-center"><i class="fa-solid fa-check text-blue-500 w-6"></i> <span>수정 횟수: <b>2회</b></span></div>
+                            <div class="flex items-center"><i class="fa-solid fa-check text-blue-500 w-6"></i> <span>3D 원본 / 고해상도 제공</span></div>
+                            <div class="flex items-center opacity-40"><i class="fa-solid fa-xmark text-slate-400 w-6"></i> <span>3D 영상 작업</span></div>
+                            <div class="flex items-center opacity-40"><i class="fa-solid fa-xmark text-slate-400 w-6"></i> <span>긴급 작업 지원</span></div>
+                        </div>
+                        <a id="link-basic" href="#" target="_blank" class="block w-full py-4 bg-slate-50 text-slate-900 font-bold rounded-xl hover:bg-slate-100 transition border border-slate-200" onclick="event.preventDefault(); const result = calculateFeesFrontend(parseFloat(document.getElementById('modal-fee').innerText.replace(/[^0-9]/g, ''))); openQuoteModal(document.getElementById('modal-title').innerText, parseFloat(document.getElementById('modal-fee').innerText.replace(/[^0-9]/g, '')), 'BASIC', result.plans.basic); return false;">선택하기</a>
                     </div>
-                    <div class="price-card border-2 border-red-500 bg-white rounded-2xl p-8 text-center shadow-xl md:-translate-y-4">
-                        <div class="text-red-500 text-xs font-bold mb-2 uppercase">👑 Premium</div>
-                        <h4 class="text-lg font-bold text-red-500 mb-1">PREMIUM</h4>
+                    <div class="price-card border-2 border-red-500 bg-white rounded-2xl p-8 text-center relative shadow-xl transform md:-translate-y-4 z-10">
+                        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md uppercase tracking-wider">
+                            👑 Premium
+                        </div>
+                        <h4 class="text-lg font-bold text-red-500 mb-1 mt-2">PREMIUM</h4>
                         <div id="price-premium" class="text-3xl font-black text-red-500 mb-2 font-mono">0원</div>
-                        <p class="text-xs text-red-400 mb-8">표준형 패키지 (100%)</p>
-                        <a id="link-premium" href="#" target="_blank" class="block w-full py-4 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition">선택하기</a>
+                        <p class="text-xs text-red-400/80 mb-8 font-medium">표준형 패키지</p>
+                        <div class="space-y-4 text-left text-sm text-slate-700 mb-10 pl-2">
+                            <div class="flex items-center"><i class="fa-solid fa-check text-red-500 w-6"></i> <span>작업 기간: <b>1주</b></span></div>
+                            <div class="flex items-center"><i class="fa-solid fa-check text-red-500 w-6"></i> <span>컷 장수: <b>무제한</b></span></div>
+                            <div class="flex items-center"><i class="fa-solid fa-check text-red-500 w-6"></i> <span>수정 횟수: <b>무제한</b></span></div>
+                            <div class="flex items-center"><i class="fa-solid fa-check text-red-500 w-6"></i> <span>3D 원본 / 고해상도 제공</span></div>
+                            <div class="flex items-center font-bold text-red-600"><i class="fa-solid fa-check text-red-500 w-6"></i> <span>3D 영상 작업 포함</span></div>
+                            <div class="flex items-center opacity-40"><i class="fa-solid fa-xmark text-slate-400 w-6"></i> <span>긴급 작업 지원</span></div>
+                        </div>
+                        <a id="link-premium" href="#" target="_blank" class="block w-full py-4 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition shadow-lg hover:shadow-red-200" onclick="event.preventDefault(); const result = calculateFeesFrontend(parseFloat(document.getElementById('modal-fee').innerText.replace(/[^0-9]/g, ''))); openQuoteModal(document.getElementById('modal-title').innerText, parseFloat(document.getElementById('modal-fee').innerText.replace(/[^0-9]/g, '')), 'PREMIUM', result.plans.premium); return false;">선택하기</a>
                     </div>
-                    <div class="price-card border border-slate-100 rounded-2xl p-8 text-center bg-white">
-                        <h4 class="text-lg font-bold text-slate-900 mb-1">EXPRESS</h4>
-                        <div id="price-express" class="text-3xl font-black text-blue-600 mb-2 font-mono">0원</div>
-                        <p class="text-xs text-slate-400 mb-8">긴급형 패키지 (120%)</p>
-                        <a id="link-express" href="#" target="_blank" class="block w-full py-4 bg-slate-100 text-slate-800 font-bold rounded-xl hover:bg-slate-200 transition border border-slate-200">선택하기</a>
+                    <div class="price-card border-2 border-yellow-400 rounded-2xl p-8 text-center relative bg-white hover:border-yellow-500 shadow-lg">
+                        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-slate-900 text-xs font-bold px-4 py-1.5 rounded-full shadow-md uppercase tracking-wider flex items-center gap-1">
+                            <i class="fa-solid fa-bolt"></i> Express
+                        </div>
+                        <h4 class="text-lg font-bold text-yellow-600 mb-1 mt-2">EXPRESS</h4>
+                        <div id="price-express" class="text-3xl font-black text-yellow-600 mb-2 font-mono">0원</div>
+                        <p class="text-xs text-yellow-600/80 mb-8 font-medium">긴급형 패키지</p>
+                        <div class="space-y-4 text-left text-sm text-slate-600 mb-10 pl-2">
+                            <div class="flex items-center"><i class="fa-solid fa-bolt text-yellow-500 w-6"></i> <span>작업 기간: <b>4일 이내</b></span></div>
+                            <div class="flex items-center"><i class="fa-solid fa-check text-yellow-500 w-6"></i> <span>컷 장수: <b>무제한</b></span></div>
+                            <div class="flex items-center"><i class="fa-solid fa-check text-yellow-500 w-6"></i> <span>수정 횟수: <b>무제한</b></span></div>
+                            <div class="flex items-center"><i class="fa-solid fa-check text-yellow-500 w-6"></i> <span>3D 원본 / 고해상도 제공</span></div>
+                            <div class="flex items-center"><i class="fa-solid fa-check text-yellow-500 w-6"></i> <span>3D 영상 작업 포함</span></div>
+                            <div class="flex items-center font-bold text-yellow-600"><i class="fa-solid fa-bolt text-yellow-500 w-6"></i> <span>긴급 작업 지원</span></div>
+                        </div>
+                        <a id="link-express" href="#" target="_blank" class="block w-full py-4 bg-yellow-400 text-slate-900 font-bold rounded-xl hover:bg-yellow-500 transition shadow-lg hover:shadow-yellow-200" onclick="event.preventDefault(); const result = calculateFeesFrontend(parseFloat(document.getElementById('modal-fee').innerText.replace(/[^0-9]/g, ''))); openQuoteModal(document.getElementById('modal-title').innerText, parseFloat(document.getElementById('modal-fee').innerText.replace(/[^0-9]/g, '')), 'EXPRESS', result.plans.express); return false;">선택하기</a>
                     </div>
                 </div>
             </div>
             
+        </div>
+    </div>
+
+    <div id="quote-modal" class="fixed inset-0 bg-black/60 z-[110] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl w-full max-w-md p-8 relative shadow-2xl">
+            <button onclick="document.getElementById('quote-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 class="text-2xl font-black text-slate-900 mb-2">📋 견적 요청</h3>
+            <p class="text-slate-500 mb-6 text-sm">고객정보를 입력해주세요. 빠른 응대가 필요하면 전화주세요!</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">프로젝트명</label>
+                    <input type="text" id="quoteProject" readonly class="w-full p-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-700 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">예상 견적가</label>
+                    <input type="text" id="quotePrice" readonly class="w-full p-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-700 font-bold text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">선택 플랜</label>
+                    <input type="text" id="quotePlan" readonly class="w-full p-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-700 font-bold text-sm">
+                </div>
+                
+                <hr class="my-3 border-slate-200">
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">성명</label>
+                    <input type="text" id="quoteName" placeholder="이름을 입력해주세요" class="w-full p-3 border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">이메일</label>
+                    <input type="email" id="quoteEmail" placeholder="example@company.com" class="w-full p-3 border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">전화번호</label>
+                    <input type="tel" id="quotePhone" placeholder="010-0000-0000" class="w-full p-3 border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">추가 요청사항</label>
+                    <textarea id="quoteMessage" placeholder="특별한 요청사항이 있으시면 입력해주세요" class="w-full p-3 border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition h-20 resize-none"></textarea>
+                </div>
+                
+                <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <p class="text-xs text-blue-800"><strong>빠른 응대가 필요하신가요?</strong><br>
+                    <i class="fa-solid fa-phone text-blue-600"></i> <strong>070-4647-1706</strong>으로 전화주세요!</p>
+                </div>
+
+                <button onclick="submitQuoteRequest()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg mt-2">
+                    견적 요청 보내기
+                </button>
+            </div>
         </div>
     </div>
 
@@ -632,6 +765,74 @@ HTML_PAGE = r"""<!DOCTYPE html>
             document.getElementById('link-premium').href = createLink("PREMIUM", result.plans.premium);
             document.getElementById('link-express').href = createLink("EXPRESS", result.plans.express);
             document.getElementById('pricing-modal').classList.remove('hidden');
+        }
+
+        function openQuoteModal(title, fee, planName, price) {
+            document.getElementById('quoteProject').value = title;
+            document.getElementById('quotePrice').value = price.toLocaleString() + "원";
+            document.getElementById('quotePlan').value = planName;
+            document.getElementById('quoteName').value = "";
+            document.getElementById('quoteEmail').value = "";
+            document.getElementById('quotePhone').value = "";
+            document.getElementById('quoteMessage').value = "";
+            document.getElementById('quote-modal').classList.remove('hidden');
+        }
+
+        async function submitQuoteRequest() {
+            const name = document.getElementById('quoteName').value.trim();
+            const email = document.getElementById('quoteEmail').value.trim();
+            const phone = document.getElementById('quotePhone').value.trim();
+            const message = document.getElementById('quoteMessage').value.trim();
+            const project = document.getElementById('quoteProject').value;
+            const plan = document.getElementById('quotePlan').value;
+            const price = document.getElementById('quotePrice').value;
+
+            if (!name) {
+                alert('성명을 입력해주세요.');
+                return;
+            }
+            if (!email || !email.includes('@')) {
+                alert('유효한 이메일 주소를 입력해주세요.');
+                return;
+            }
+            if (!phone) {
+                alert('전화번호를 입력해주세요.');
+                return;
+            }
+
+            const btn = document.querySelector('#quote-modal button');
+            const originalText = btn.innerText;
+            btn.innerText = "전송 중...";
+            btn.disabled = true;
+
+            try {
+                const resp = await fetch('/api/quote-request', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        phone: phone,
+                        message: message,
+                        project: project,
+                        plan: plan,
+                        price: price
+                    })
+                });
+                const data = await resp.json();
+                
+                if(data.success) {
+                    alert('견적 요청이 전송되었습니다! 곧 연락드리겠습니다.');
+                    document.getElementById('quote-modal').classList.add('hidden');
+                } else {
+                    alert('오류: ' + data.msg);
+                }
+            } catch(e) {
+                alert('전송 오류가 발생했습니다.');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
         }
 
         function openSubModal() {
@@ -846,6 +1047,72 @@ def unsubscribe():
         <a href="/">홈으로 가기</a>
     </div>
     """
+
+
+@app.post("/api/quote-request")
+def quote_request():
+    data = request.json
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip()
+    phone = data.get("phone", "").strip()
+    message = data.get("message", "").strip()
+    project = data.get("project", "").strip()
+    plan = data.get("plan", "").strip()
+    price = data.get("price", "").strip()
+    
+    if not all([name, email, phone]):
+        return jsonify({"success": False, "msg": "필수 정보를 입력해주세요."})
+    
+    try:
+        # 고객에게 발송
+        customer_subject = f"[위너스케치] 견적 요청이 접수되었습니다"
+        customer_html = f"""
+        <div style="font-family:'Malgun Gothic', sans-serif; max-width:600px; margin:0 auto; padding:20px; border:1px solid #ddd; border-radius:10px;">
+            <h2 style="color:#1E3A8A;">[위너스케치] 견적 요청 접수 완료</h2>
+            <p>안녕하세요 {name}님,</p>
+            <p>견적 요청이 정상 접수되었습니다. 빠른 시간 내에 연락드리겠습니다.</p>
+            
+            <div style="background:#f8fafc; padding:15px; border-radius:8px; margin:20px 0;">
+                <p><strong>프로젝트:</strong> {project}</p>
+                <p><strong>선택 플랜:</strong> {plan}</p>
+                <p><strong>예상 견적가:</strong> {price}</p>
+                <p><strong>연락처:</strong> {phone}</p>
+            </div>
+            
+            <p>빠른 응대가 필요하신 경우 아래번호로 전화주세요!</p>
+            <p style="font-size:18px; color:#2563EB; font-weight:bold;">📞 070-4647-1706</p>
+            
+            <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+            <p style="font-size:12px; color:#64748b; text-align:center;">위너스케치 | winnersketch.kr@gmail.com</p>
+        </div>
+        """
+        send_email(email, customer_subject, customer_html)
+        
+        # 관리자에게 발송
+        admin_subject = f"[신규 견적 요청] {project} - {plan}"
+        admin_html = f"""
+        <div style="font-family:'Malgun Gothic', sans-serif; max-width:600px; margin:0 auto; padding:20px; border:1px solid #ddd; border-radius:10px; background:#fff3cd;">
+            <h2 style="color:#856404;">🔔 신규 견적 요청 알림</h2>
+            
+            <div style="background:#ffffff; padding:15px; border-radius:8px; margin:20px 0; border-left:4px solid #ffc107;">
+                <p><strong>성명:</strong> {name}</p>
+                <p><strong>이메일:</strong> {email}</p>
+                <p><strong>전화:</strong> {phone}</p>
+                <p><strong>프로젝트:</strong> {project}</p>
+                <p><strong>선택 플랜:</strong> {plan}</p>
+                <p><strong>예상 견적가:</strong> {price}</p>
+                {f'<p><strong>추가 요청:</strong><br>{message}</p>' if message else ''}
+            </div>
+            
+            <p style="color:#856404;"><strong>즉시 응대 필요!</strong></p>
+        </div>
+        """
+        send_email("winnersketch.kr@gmail.com", admin_subject, admin_html)
+        
+        return jsonify({"success": True, "msg": "견적 요청이 전송되었습니다."})
+    except Exception as e:
+        print(f"[ERROR] 견적 요청 실패: {e}")
+        return jsonify({"success": False, "msg": str(e)})
 
 
 if __name__ == "__main__":
