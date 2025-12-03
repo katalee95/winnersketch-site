@@ -306,7 +306,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
             <div class="text-2xl font-black text-slate-900 tracking-tighter cursor-pointer" onclick="window.scrollTo(0,0)">
                 WINNERSKETCH
             </div>
-            <a href="mailto:winnersketch.kr@gmail.com" class="text-sm font-bold text-slate-500 hover:text-blue-600 transition">
+            <a href="javascript:void(0)" onclick="openContactModal()" class="text-sm font-bold text-slate-500 hover:text-blue-600 transition">
                 문의하기
             </a>
         </div>
@@ -534,12 +534,50 @@ HTML_PAGE = r"""<!DOCTYPE html>
         </div>
     </div>
 
+    <div id="contact-modal" class="fixed inset-0 bg-black/60 z-[110] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl w-full max-w-md p-8 relative shadow-2xl">
+            <button onclick="document.getElementById('contact-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 class="text-2xl font-black text-slate-900 mb-2">💬 문의하기</h3>
+            <p class="text-slate-500 mb-6 text-sm">궁금한 점을 알려주세요. 빠르게 응대하겠습니다.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">성명</label>
+                    <input type="text" id="contactName" placeholder="이름을 입력해주세요" class="w-full p-3 border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">이메일</label>
+                    <input type="email" id="contactEmail" placeholder="example@company.com" class="w-full p-3 border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">전화번호</label>
+                    <input type="tel" id="contactPhone" placeholder="010-0000-0000" class="w-full p-3 border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">문의 내용</label>
+                    <textarea id="contactMessage" placeholder="문의 내용을 입력해주세요" class="w-full p-3 border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition h-24 resize-none"></textarea>
+                </div>
+                
+                <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <p class="text-xs text-blue-800"><strong>빠른 응대가 필요하신가요?</strong><br>
+                    <i class="fa-solid fa-phone text-blue-600"></i> <strong>070-4647-1706</strong>으로 전화주세요!</p>
+                </div>
+
+                <button onclick="submitContactRequest()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg mt-2">
+                    문의 전송하기
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="quote-modal" class="fixed inset-0 bg-black/60 z-[110] hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-2xl w-full max-w-md p-8 relative shadow-2xl">
             <button onclick="document.getElementById('quote-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
-            <h3 class="text-2xl font-black text-slate-900 mb-2">📋 견적 요청</h3>
+            <h3 class="text-2xl font-black text-slate-900 mb-2">🎨 작업 요청</h3>
             <p class="text-slate-500 mb-6 text-sm">고객정보를 입력해주세요. 빠른 응대가 필요하면 전화주세요!</p>
             
             <div class="space-y-4">
@@ -581,7 +619,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                 </div>
 
                 <button onclick="submitQuoteRequest()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg mt-2">
-                    견적 요청 보내기
+                    작업 요청 보내기
                 </button>
             </div>
         </div>
@@ -689,7 +727,16 @@ HTML_PAGE = r"""<!DOCTYPE html>
             const container = document.getElementById(containerId);
             container.innerHTML = "";
             if (!items || items.length === 0) {
-                container.innerHTML = `<div class="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200"><p class="text-slate-400 font-medium">조건에 맞는 공고가 없습니다.</p></div>`;
+                container.innerHTML = `
+                    <div class="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                        <p class="text-slate-400 font-medium mb-4">조건에 맞는 공고가 없습니다.</p>
+                        <p class="text-slate-400 text-sm mb-6">원하시는 조건의 공고가 있는지 직접 문의해보세요.</p>
+                        <button onclick="openContactModal()" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition text-sm">
+                            <i class="fa-solid fa-envelope mr-2"></i>문의하기
+                        </button>
+                        <p class="text-slate-500 text-xs mt-4">또는 <strong>070-4647-1706</strong>으로 전화주세요</p>
+                    </div>
+                `;
                 return;
             }
             items.forEach(item => {
@@ -822,8 +869,71 @@ HTML_PAGE = r"""<!DOCTYPE html>
                 const data = await resp.json();
                 
                 if(data.success) {
-                    alert('견적 요청이 전송되었습니다! 곧 연락드리겠습니다.');
+                    alert('작업 요청이 전송되었습니다! 곧 연락드리겠습니다.');
                     document.getElementById('quote-modal').classList.add('hidden');
+                } else {
+                    alert('오류: ' + data.msg);
+                }
+            } catch(e) {
+                alert('전송 오류가 발생했습니다.');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function openContactModal() {
+            document.getElementById('contactName').value = "";
+            document.getElementById('contactEmail').value = "";
+            document.getElementById('contactPhone').value = "";
+            document.getElementById('contactMessage').value = "";
+            document.getElementById('contact-modal').classList.remove('hidden');
+        }
+
+        async function submitContactRequest() {
+            const name = document.getElementById('contactName').value.trim();
+            const email = document.getElementById('contactEmail').value.trim();
+            const phone = document.getElementById('contactPhone').value.trim();
+            const message = document.getElementById('contactMessage').value.trim();
+
+            if (!name) {
+                alert('성명을 입력해주세요.');
+                return;
+            }
+            if (!email || !email.includes('@')) {
+                alert('유효한 이메일 주소를 입력해주세요.');
+                return;
+            }
+            if (!phone) {
+                alert('전화번호를 입력해주세요.');
+                return;
+            }
+            if (!message) {
+                alert('문의 내용을 입력해주세요.');
+                return;
+            }
+
+            const btn = document.querySelector('#contact-modal button');
+            const originalText = btn.innerText;
+            btn.innerText = "전송 중...";
+            btn.disabled = true;
+
+            try {
+                const resp = await fetch('/api/contact-request', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        phone: phone,
+                        message: message
+                    })
+                });
+                const data = await resp.json();
+                
+                if(data.success) {
+                    alert('문의가 전송되었습니다! 곧 연락드리겠습니다.');
+                    document.getElementById('contact-modal').classList.add('hidden');
                 } else {
                     alert('오류: ' + data.msg);
                 }
@@ -1065,12 +1175,12 @@ def quote_request():
     
     try:
         # 고객에게 발송
-        customer_subject = f"[위너스케치] 견적 요청이 접수되었습니다"
+        customer_subject = f"[위너스케치] 작업 요청이 접수되었습니다"
         customer_html = f"""
         <div style="font-family:'Malgun Gothic', sans-serif; max-width:600px; margin:0 auto; padding:20px; border:1px solid #ddd; border-radius:10px;">
-            <h2 style="color:#1E3A8A;">[위너스케치] 견적 요청 접수 완료</h2>
+            <h2 style="color:#1E3A8A;">[위너스케치] 작업 요청 접수 완료</h2>
             <p>안녕하세요 {name}님,</p>
-            <p>견적 요청이 정상 접수되었습니다. 빠른 시간 내에 연락드리겠습니다.</p>
+            <p>작업 요청이 정상 접수되었습니다. 빠른 시간 내에 연락드리겠습니다.</p>
             
             <div style="background:#f8fafc; padding:15px; border-radius:8px; margin:20px 0;">
                 <p><strong>프로젝트:</strong> {project}</p>
@@ -1089,10 +1199,10 @@ def quote_request():
         send_email(email, customer_subject, customer_html)
         
         # 관리자에게 발송
-        admin_subject = f"[신규 견적 요청] {project} - {plan}"
+        admin_subject = f"[신규 작업 요청] {project} - {plan}"
         admin_html = f"""
         <div style="font-family:'Malgun Gothic', sans-serif; max-width:600px; margin:0 auto; padding:20px; border:1px solid #ddd; border-radius:10px; background:#fff3cd;">
-            <h2 style="color:#856404;">🔔 신규 견적 요청 알림</h2>
+            <h2 style="color:#856404;">🔔 신규 작업 요청 알림</h2>
             
             <div style="background:#ffffff; padding:15px; border-radius:8px; margin:20px 0; border-left:4px solid #ffc107;">
                 <p><strong>성명:</strong> {name}</p>
@@ -1109,9 +1219,69 @@ def quote_request():
         """
         send_email("winnersketch.kr@gmail.com", admin_subject, admin_html)
         
-        return jsonify({"success": True, "msg": "견적 요청이 전송되었습니다."})
+        return jsonify({"success": True, "msg": "작업 요청이 전송되었습니다."})
     except Exception as e:
-        print(f"[ERROR] 견적 요청 실패: {e}")
+        print(f"[ERROR] 작업 요청 실패: {e}")
+        return jsonify({"success": False, "msg": str(e)})
+
+
+@app.post("/api/contact-request")
+def contact_request():
+    data = request.json
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip()
+    phone = data.get("phone", "").strip()
+    message = data.get("message", "").strip()
+    
+    if not all([name, email, phone, message]):
+        return jsonify({"success": False, "msg": "필수 정보를 입력해주세요."})
+    
+    try:
+        # 고객에게 발송
+        customer_subject = f"[위너스케치] 문의가 접수되었습니다"
+        customer_html = f"""
+        <div style="font-family:'Malgun Gothic', sans-serif; max-width:600px; margin:0 auto; padding:20px; border:1px solid #ddd; border-radius:10px;">
+            <h2 style="color:#1E3A8A;">[위너스케치] 문의 접수 완료</h2>
+            <p>안녕하세요 {name}님,</p>
+            <p>문의사항이 정상 접수되었습니다. 빠른 시간 내에 연락드리겠습니다.</p>
+            
+            <div style="background:#f8fafc; padding:15px; border-radius:8px; margin:20px 0;">
+                <p><strong>문의 내용:</strong></p>
+                <p style="white-space: pre-wrap;">{message}</p>
+                <p style="margin-top:15px;"><strong>연락처:</strong> {phone}</p>
+            </div>
+            
+            <p>빠른 응대가 필요하신 경우 아래번호로 전화주세요!</p>
+            <p style="font-size:18px; color:#2563EB; font-weight:bold;">📞 070-4647-1706</p>
+            
+            <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+            <p style="font-size:12px; color:#64748b; text-align:center;">위너스케치 | winnersketch.kr@gmail.com</p>
+        </div>
+        """
+        send_email(email, customer_subject, customer_html)
+        
+        # 관리자에게 발송
+        admin_subject = f"[신규 문의] {name}"
+        admin_html = f"""
+        <div style="font-family:'Malgun Gothic', sans-serif; max-width:600px; margin:0 auto; padding:20px; border:1px solid #ddd; border-radius:10px; background:#fff3cd;">
+            <h2 style="color:#856404;">🔔 신규 문의 알림</h2>
+            
+            <div style="background:#ffffff; padding:15px; border-radius:8px; margin:20px 0; border-left:4px solid #ffc107;">
+                <p><strong>성명:</strong> {name}</p>
+                <p><strong>이메일:</strong> {email}</p>
+                <p><strong>전화:</strong> {phone}</p>
+                <p><strong>문의 내용:</strong></p>
+                <p style="white-space: pre-wrap; background:#f5f5f5; padding:10px; border-radius:5px;">{message}</p>
+            </div>
+            
+            <p style="color:#856404;"><strong>즉시 응대 필요!</strong></p>
+        </div>
+        """
+        send_email("winnersketch.kr@gmail.com", admin_subject, admin_html)
+        
+        return jsonify({"success": True, "msg": "문의가 전송되었습니다."})
+    except Exception as e:
+        print(f"[ERROR] 문의 요청 실패: {e}")
         return jsonify({"success": False, "msg": str(e)})
 
 
