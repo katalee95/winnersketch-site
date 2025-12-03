@@ -125,7 +125,7 @@ def get_competition_data(keyword, rows=100, strict_mode=False):
         "철거", "관리", "운영", "개량", "검토", "복원", "임도",
         "산림", "산불", "예방", "폐기", "설치", "보수", "전기",
         "사방", "정비", "급수", "교량", "지표", "고도화",
-        "감리", "안전진단",
+        "감리", "안전진단", "임차용역",
     ]
 
     if strict_mode:
@@ -378,12 +378,14 @@ HTML_PAGE = r"""<!DOCTYPE html>
                         <div class="flex flex-col md:flex-row items-center gap-4">
                             <div class="w-full md:w-1/2 relative">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">최소</span>
-                                <input type="number" id="minFee" value="0" class="w-full p-3 pl-12 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:border-blue-500 transition" placeholder="0">
+                                <input type="number" id="minFee" value="10000" class="w-full p-3 pl-12 pr-16 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:border-blue-500 transition" placeholder="5000">
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">(만원)</span>
                             </div>
                             <span class="text-slate-300 font-light hidden md:block">~</span>
                             <div class="w-full md:w-1/2 relative">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">최대</span>
-                                <input type="number" id="maxFee" value="5000000000" class="w-full p-3 pl-12 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:border-blue-500 transition" placeholder="MAX">
+                                <input type="number" id="maxFee" value="15000" class="w-full p-3 pl-12 pr-16 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:border-blue-500 transition" placeholder="7000">
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">(만원)</span>
                             </div>
                             <button onclick="filterRecommendations()" class="w-full md:w-auto bg-slate-800 text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-900 transition whitespace-nowrap">
                                 적용하기
@@ -570,7 +572,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
             }
 
             items.forEach(item => {
-                const feeText = item.fee > 0 ? item.fee.toLocaleString() + "원" : "설계비 미공개";
+                const feeText = item.fee > 0 ? item.fee.toLocaleString() + "원 (" + Math.floor(item.fee / 10000).toLocaleString() + "만원)" : "설계비 미공개";
                 const isPriceAvailable = item.fee > 0;
                 const safeTitle = item.title.replace(/"/g, '&quot;');
                 
@@ -634,8 +636,13 @@ HTML_PAGE = r"""<!DOCTYPE html>
         }
 
         async function filterRecommendations() {
-            const min = parseInt(document.getElementById('minFee').value) || 0;
-            const max = parseInt(document.getElementById('maxFee').value) || 999999999999;
+            const minInput = parseInt(document.getElementById('minFee').value) || 0;
+            const maxInput = parseInt(document.getElementById('maxFee').value) || 999999999999;
+            
+            // 만원 단위를 원 단위로 변환
+            const min = minInput * 10000;
+            const max = maxInput * 10000;
+            
             const container = document.getElementById('recommend-results');
             container.innerHTML = `
                 <div class="text-center py-10 text-slate-400">
