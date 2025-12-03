@@ -810,3 +810,10 @@ def api_recommend():
     )
 
     return jsonify({"items": merged})
+
+# ==============================
+# 5. 서버 실행 (이 부분이 없으면 꺼짐)
+# ==============================
+if __name__ == '__main__':
+    # debug=True로 하면 코드 수정 시 자동 재시작되어 편리합니다.
+    app.run(debug=True, host='0.0.0.0', port=5000)
