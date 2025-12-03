@@ -5,6 +5,7 @@ import uuid
 import sqlite3
 import smtplib
 from datetime import datetime, timedelta
+import time
 import xml.etree.ElementTree as ET
 from urllib.parse import quote as url_quote
 from email.mime.text import MIMEText
@@ -31,6 +32,13 @@ SMTP_PASSWORD = "ooedozuheenpwwxd"  # 🔴🔴🔴 (띄어쓰기 없이 입력�
 
 # 💾 데이터베이스 파일명
 DB_FILE = "subscribers.db"
+
+
+# 🚀 캐시 시스템 (메모리 기반) - API 호출 최적화
+from threading import Lock
+cache_lock = Lock()
+api_cache = {}
+CACHE_DURATION = 300  # 5분간 캐시 유지
 
 
 def init_db():
@@ -108,6 +116,15 @@ def fetch_data_from_url(base_url, params, api_key):
         return [], {"status": str(e)}
 
 def get_competition_data(keyword, rows=100, strict_mode=False, days=30):
+    # 🚀 캐시 확인
+    cache_key = f"{keyword}_{rows}_{strict_mode}_{days}"
+    with cache_lock:
+        if cache_key in api_cache:
+            cached_data, cached_time = api_cache[cache_key]
+            if time.time() - cached_time < CACHE_DURATION:
+                print(f"[캐시 HIT] {keyword} - 캐시된 데이터 사용")
+                return cached_data, []
+    
     clean_key = REAL_API_KEY.strip()
     if clean_key == "":
         return [], []
@@ -181,6 +198,12 @@ def get_competition_data(keyword, rows=100, strict_mode=False, days=30):
         })
 
     cleaned.sort(key=lambda x: x["notice_date"], reverse=True)
+    
+    # 🚀 캐시에 저장
+    with cache_lock:
+        api_cache[cache_key] = (cleaned, time.time())
+        print(f"[캐시 MISS] {keyword} - 새로 조회하여 캐시 저장 (결과: {len(cleaned)}건)")
+    
     return cleaned, debug_logs
 
 
@@ -1151,18 +1174,29 @@ def api_recommend():
     try: max_fee = int(request.args.get("max", "999999999999") or 999999999999)
     except: max_fee = 999999999999
 
+    # 🚀 최적화: 병렬 처리로 API 호출 속도 개선
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    
     keywords = ["건축설계", "설계공모", "실시설계", "리모델링"]
     merged = []
     seen = set()
 
-    for kw in keywords:
-        res, _ = get_competition_data(kw, rows=100, strict_mode=True, days=30)
-        for item in res:
-            uid = f"{item['title']}_{item['agency']}"
-            if uid in seen: continue
-            seen.add(uid)
-            if not (min_fee <= item["fee"] <= max_fee): continue
-            merged.append(item)
+    # 병렬로 모든 키워드 검색 (기존: 순차 -> 최적화: 동시 실행)
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        future_to_kw = {executor.submit(get_competition_data, kw, 100, True, 30): kw for kw in keywords}
+        
+        for future in as_completed(future_to_kw):
+            kw = future_to_kw[future]
+            try:
+                res, _ = future.result()
+                for item in res:
+                    uid = f"{item['title']}_{item['agency']}"
+                    if uid in seen: continue
+                    seen.add(uid)
+                    if not (min_fee <= item["fee"] <= max_fee): continue
+                    merged.append(item)
+            except Exception as e:
+                print(f"[ERROR] {kw} 검색 실패: {e}")
 
     merged.sort(key=lambda x: x["notice_date"], reverse=True)
     return jsonify({"items": merged})
