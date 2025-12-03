@@ -803,6 +803,20 @@ def api_recommend():
         merged.append(item)
         seen.add(uid)
 
+        # 최상단 고정을 위한 정렬
+    # MANUAL_DATA에 있는 항목을 우선적으로 배치 (0순위), 나머지는 1순위
+    manual_titles = set(m['title'] for m in MANUAL_DATA)
+    
+    merged.sort(
+        key=lambda x: (
+            0 if x['title'] in manual_titles else 1,  # 수동 데이터 우선 (0)
+            x["deadline"] if x["deadline"] != "-" else "0000-00-00" # 그 다음 마감일 순
+        ),
+        reverse=False,
+    )
+    
+    return jsonify({"items": merged})
+
     # 정렬 및 반환
     merged.sort(
         key=lambda x: x["deadline"] if x["deadline"] != "-" else "0000-00-00",
