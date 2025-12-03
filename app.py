@@ -1,29 +1,82 @@
 import math
 import json
-import re  # 정규식 모듈
+import re
+import uuid
+import sqlite3
+import smtplib
+import time
 from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
 from urllib.parse import quote as url_quote
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 import requests
 from flask import Flask, request, Response, jsonify
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # ==============================
-# 1. 기본 설정
+# 1. 기본 설정 및 DB/메일 설정
 # ==============================
 
 app = Flask(__name__)
 
 # 🔑 공공데이터포털 나라장터 API 키
-REAL_API_KEY = "7bab15bfb6883de78a3e2720338237530938fbeca5a7f4038ef1dfd0450dca48" 
+REAL_API_KEY = "7bab15bfb6883de78a3e2720338237530938fbeca5a7f4038ef1dfd0450dca48"
+
+# 📧 메일 서버 설정 (반드시 본인 계정으로 수정 필요)
+# 예시: 네이버웍스(smtp.worksmobile.com), 지메일(smtp.gmail.com)
+SMTP_SERVER = "smtp.worksmobile.com"  # 네이버웍스 기준
+SMTP_PORT = 587
+SMTP_USER = "contact@oskstudio.kr"  # 🔴 발송할 실제 이메일 주소 입력
+SMTP_PASSWORD = "Gozldgkwlak414800#"          # 🔴 이메일 비밀번호 (또는 앱 비밀번호)
+
+# 💾 데이터베이스 파일명
+DB_FILE = "subscribers.db"
+
+
+def init_db():
+    """DB 테이블 초기화"""
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    # 이메일, 최소금액, 최대금액, 관리토큰, 마케팅동의, 생성일
+    c.execute('''CREATE TABLE IF NOT EXISTS subscribers
+                 (email TEXT PRIMARY KEY, min_fee INTEGER, max_fee INTEGER, 
+                  token TEXT, marketing_agreed INTEGER, created_at TEXT)''')
+    conn.commit()
+    conn.close()
+
+# 앱 시작 시 DB 생성
+init_db()
 
 
 # ==============================
-# 2. 나라장터 API 유틸 함수
+# 2. 유틸리티 함수 (메일, API)
 # ==============================
+
+def send_email(to_email, subject, html_content):
+    """HTML 형식의 이메일 발송"""
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = f"위너스케치 <{SMTP_USER}>"
+        msg["To"] = to_email
+
+        part = MIMEText(html_content, "html")
+        msg.attach(part)
+
+        # SMTP 연결 및 발송
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(SMTP_USER, to_email, msg.as_string())
+        print(f"[메일발송성공] {to_email}")
+        return True
+    except Exception as e:
+        print(f"[메일발송실패] {e}")
+        return False
 
 def parse_api_response(response):
-    """JSON 또는 XML 응답을 items 리스트로 변환"""
     try:
         data = response.json()
         body = data.get("response", {}).get("body", {})
@@ -31,7 +84,6 @@ def parse_api_response(response):
         return items if items else []
     except json.JSONDecodeError:
         pass
-
     try:
         root = ET.fromstring(response.text)
         items = []
@@ -44,46 +96,26 @@ def parse_api_response(response):
     except Exception:
         return []
 
-
 def fetch_data_from_url(base_url, params, api_key):
     headers = {"User-Agent": "Mozilla/5.0"}
-    
-    if "%" in api_key:
-        final_key = api_key
-    else:
-        final_key = url_quote(api_key)
-
+    final_key = api_key if "%" in api_key else url_quote(api_key)
     full_url = f"{base_url}?serviceKey={final_key}"
-
     try:
-        resp = requests.get(
-            full_url,
-            params=params,
-            timeout=20,
-            headers=headers,
-        )
+        resp = requests.get(full_url, params=params, timeout=20, headers=headers)
         if resp.status_code != 200:
-            return [], {"status": resp.status_code, "response": "Error"}
+            return [], {"status": resp.status_code}
         parsed = parse_api_response(resp)
-        return parsed, {"status": 200, "response": "Success"}
+        return parsed, {"status": 200}
     except Exception as e:
-        return [], {"status": "Exception", "response": str(e)}
+        return [], {"status": str(e)}
 
-
-def get_competition_data(keyword, rows=100, strict_mode=False):
-    """
-    keyword: 검색어
-    strict_mode:
-        - False: '설계' 포함 + 불필터 키워드 제외 + 제목/기관에 keyword 포함
-        - True : 설계공모/실시설계/리모델링 등만 더 강하게 필터
-    """
+def get_competition_data(keyword, rows=100, strict_mode=False, days=30):
     clean_key = REAL_API_KEY.strip()
     if clean_key == "":
         return [], []
 
     now = datetime.now()
-    days_to_fetch = 30
-    inqryBgnDt = (now - timedelta(days=days_to_fetch)).strftime("%Y%m%d0000")
+    inqryBgnDt = (now - timedelta(days=days)).strftime("%Y%m%d0000")
     inqryEndDt = now.strftime("%Y%m%d2359")
 
     params = {
@@ -98,8 +130,6 @@ def get_competition_data(keyword, rows=100, strict_mode=False):
     targets = [
         ("https://apis.data.go.kr/1230000/ad/BidPublicInfoService/getBidPblancListInfoServcPPSSrch", "신버전(조달)"),
         ("https://apis.data.go.kr/1230000/ad/BidPublicInfoService/getBidPblancListInfoServcOrgnSearch", "신버전(자체)"),
-        ("https://apis.data.go.kr/1230000/BidPublicInfoService04/getBidPblancListInfoServcPPSSrch", "구버전(조달)"),
-        ("https://apis.data.go.kr/1230000/BidPublicInfoService04/getBidPblancListInfoServcOrgnSearch", "구버전(자체)"),
     ]
 
     all_results = []
@@ -110,93 +140,148 @@ def get_competition_data(keyword, rows=100, strict_mode=False):
         current_params["bidNm"] = keyword
         current_params["bidNtceNm"] = keyword
         items, debug = fetch_data_from_url(url, current_params, clean_key)
-        debug_logs.append(f"[{type_label}] {debug['response']}")
         for item in items:
-            item["type_label"] = type_label
             all_results.append(item)
-
-    if not all_results:
-        return [], debug_logs
 
     cleaned = []
     seen_ids = set()
-
-    exclude_keywords = [
-        "철거", "관리", "운영", "개량", "검토", "복원", "임도",
-        "산림", "산불", "예방", "폐기", "설치", "보수", "전기",
-        "사방", "정비", "급수", "교량", "지표", "고도화",
-        "감리", "안전진단", "임차용역",
-    ]
-
-    if strict_mode:
-        must_have = ["설계공모", "설계 공모", "실시 설계", "실시설계", "건축설계", "리모델링"]
-    else:
-        must_have = ["설계"]
+    exclude_keywords = ["철거", "관리", "운영", "개량", "검토", "복원", "임도", "산림", "산불", "예방", "폐기", "설치", "보수", "전기", "사방", "정비", "급수", "교량", "감리", "안전진단", "임차용역"]
+    must_have = ["설계공모", "설계 공모", "실시 설계", "실시설계", "건축설계", "리모델링"] if strict_mode else ["설계"]
 
     for item in all_results:
         bid_id = item.get("bidNtceNo")
-        if bid_id in seen_ids:
-            continue
+        if bid_id in seen_ids: continue
 
         title = item.get("bidNtceNm", "") or ""
         agency = item.get("ntceInsttNm") or item.get("dminsttNm") or ""
 
-        if not strict_mode:
-            if keyword and (keyword not in title and keyword not in agency):
-                continue
-
-        if not any(k in title for k in must_have):
-            continue
-        if any(ex in title for ex in exclude_keywords):
-            continue
+        if not strict_mode and keyword and (keyword not in title and keyword not in agency): continue
+        if not any(k in title for k in must_have): continue
+        if any(ex in title for ex in exclude_keywords): continue
 
         seen_ids.add(bid_id)
 
         price_raw = item.get("presmptPrce", 0) or 0
-        try:
-            price = int(price_raw)
-        except Exception:
-            price = 0
+        try: price = int(price_raw)
+        except: price = 0
 
-        # ========== [수정됨] 공고일(bidNtceDt) 파싱 ==========
-        notice_date_str = str(item.get("bidNtceDt", "") or "")
-        
-        # 숫자만 추출 (2025/12/08 17:00 -> 202512081700)
-        notice_date_digits = re.sub(r'[^0-9]', '', notice_date_str)
-        
-        if len(notice_date_digits) >= 8:
-            notice_date = f"{notice_date_digits[0:4]}-{notice_date_digits[4:6]}-{notice_date_digits[6:8]}"
+        notice_date_str = re.sub(r'[^0-9]', '', str(item.get("bidNtceDt", "") or ""))
+        if len(notice_date_str) >= 8:
+            notice_date = f"{notice_date_str[0:4]}-{notice_date_str[4:6]}-{notice_date_str[6:8]}"
         else:
             notice_date = "-"
-        # ===================================================
 
-        # 공고 URL 생성
         url_link = item.get("bidNtceDtlUrl", "") or item.get("bidNtceUrl", "")
         if not url_link and bid_id:
-            bid_ord = item.get("bidNtceOrd", "01") 
+            bid_ord = item.get("bidNtceOrd", "01")
             url_link = f"https://www.g2b.go.kr:8081/ep/invitation/publish/bidInfoDtl.do?bidno={bid_id}&bidseq={bid_ord}&releaseYn=Y&taskClCd=1"
 
-        cleaned.append(
-            {
-                "title": title,
-                "agency": agency,
-                "fee": price,
-                "notice_date": notice_date,  # 마감일 대신 공고일
-                "url": url_link,
-            }
-        )
+        cleaned.append({
+            "title": title, "agency": agency, "fee": price, 
+            "notice_date": notice_date, "url": url_link,
+            "raw_date": notice_date_str[:8] # 정렬 및 비교용
+        })
 
-    # 공고일 기준 정렬 (최신순)
-    cleaned.sort(
-        key=lambda x: x["notice_date"] if x["notice_date"] != "-" else "0000-00-00",
-        reverse=True,  # 최신 공고가 먼저 오도록
-    )
-
+    cleaned.sort(key=lambda x: x["notice_date"], reverse=True)
     return cleaned, debug_logs
 
 
 # ==============================
-# 3. HTML 템플릿
+# 3. 스케줄러 (매일 아침 자동 실행)
+# ==============================
+
+def job_send_daily_emails():
+    """매일 아침 실행되어 조건에 맞는 공고를 메일로 발송"""
+    print(f"[{datetime.now()}] 스케줄러 시작: 일일 구독 메일 발송")
+    
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    subscribers = cursor.execute("SELECT * FROM subscribers").fetchall()
+    
+    if not subscribers:
+        print("구독자가 없습니다.")
+        conn.close()
+        return
+
+    # 최근 2일치 데이터만 조회 (오늘, 어제)
+    keywords = ["건축설계", "설계공모", "리모델링"]
+    all_items = []
+    seen_ids = set()
+    
+    # 3일치 데이터를 긁어와서 날짜로 필터링
+    target_date_limit = (datetime.now() - timedelta(days=2)).strftime("%Y%m%d")
+
+    for kw in keywords:
+        items, _ = get_competition_data(kw, rows=50, strict_mode=True, days=3)
+        for item in items:
+            uid = f"{item['title']}_{item['agency']}"
+            # 공고일이 최근 2일 이내인 것만
+            if item['raw_date'] >= target_date_limit and uid not in seen_ids:
+                seen_ids.add(uid)
+                all_items.append(item)
+
+    print(f"수집된 최신 공고: {len(all_items)}건")
+
+    # 구독자별 필터링 및 발송
+    for user in subscribers:
+        user_items = []
+        for item in all_items:
+            # 금액 조건 확인
+            if user['min_fee'] <= item['fee'] <= user['max_fee']:
+                user_items.append(item)
+        
+        if user_items:
+            token = user['token']
+            # ※ 실제 운영시에는 localhost 대신 실제 도메인 입력
+            manage_link = f"http://localhost:8000/manage/{token}"
+            
+            html_body = f"""
+            <div style="font-family:'Malgun Gothic', sans-serif; max-width:600px; margin:0 auto; padding:20px; border:1px solid #ddd; border-radius:10px;">
+                <h2 style="color:#1E3A8A;">[위너스케치] 오늘의 맞춤 공모 알림</h2>
+                <p>설정하신 금액대(<strong>{user['min_fee']//10000}만 ~ {user['max_fee']//10000}만원</strong>)에 해당하는 새로운 공고가 도착했습니다.</p>
+                <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+                <ul style="padding-left:0; list-style:none;">
+            """
+            
+            for item in user_items:
+                fee_str = f"{item['fee']:,}원" if item['fee'] > 0 else "미공개"
+                html_body += f"""
+                <li style="margin-bottom:20px; padding-bottom:20px; border-bottom:1px dashed #eee;">
+                    <div style="font-size:16px; font-weight:bold; color:#333;">{item['title']}</div>
+                    <div style="font-size:14px; color:#666; margin-top:5px;">
+                        발주처: {item['agency']} | <span style="color:#2563EB;">설계비: {fee_str}</span>
+                    </div>
+                    <div style="margin-top:10px;">
+                        <a href="{item['url']}" style="background:#f1f5f9; color:#475569; text-decoration:none; padding:5px 10px; border-radius:5px; font-size:12px;">공고 바로가기 &rarr;</a>
+                    </div>
+                </li>
+                """
+            
+            html_body += f"""
+                </ul>
+                <div style="background:#f8fafc; padding:15px; border-radius:8px; font-size:12px; color:#64748b; text-align:center; margin-top:30px;">
+                    본 메일은 정보통신망법 준수를 위해 (광고) 표시가 포함될 수 있습니다.<br>
+                    더 이상 알림을 원치 않으시거나 조건을 변경하시려면 아래 링크를 클릭하세요.<br>
+                    <a href="{manage_link}" style="color:#2563EB; font-weight:bold; text-decoration:underline;">[설정 변경 및 수신거부]</a>
+                </div>
+            </div>
+            """
+            
+            subject = f"(광고) [위너스케치] 고객님을 위한 {len(user_items)}건의 새로운 공고가 도착했습니다."
+            send_email(user['email'], subject, html_body)
+
+    conn.close()
+    print("스케줄러 작업 완료")
+
+# 스케줄러 등록 (매일 08:30 실행)
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=job_send_daily_emails, trigger="cron", hour=8, minute=30)
+scheduler.start()
+
+
+# ==============================
+# 4. HTML 템플릿 (UI 업데이트)
 # ==============================
 
 HTML_PAGE = r"""<!DOCTYPE html>
@@ -205,60 +290,21 @@ HTML_PAGE = r"""<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>위너스케치 - 건축 현상설계 파트너</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
-
     <style>
-        body {
-            font-family: 'Pretendard', sans-serif;
-            background-color: #ffffff;
-            color: #111;
-        }
-        
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8; 
-        }
-
-        .tab-active {
-            color: #1E3A8A;
-            border-bottom: 3px solid #1E3A8A;
-            font-weight: 800;
-        }
-        .tab-inactive {
-            color: #94A3B8;
-            border-bottom: 3px solid transparent;
-            font-weight: 600;
-        }
-        .tab-inactive:hover {
-            color: #64748B;
-        }
-
-        .price-card {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .price-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-        
-        .feature-card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
+        body { font-family: 'Pretendard', sans-serif; background-color: #ffffff; color: #111; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .tab-active { color: #1E3A8A; border-bottom: 3px solid #1E3A8A; font-weight: 800; }
+        .tab-inactive { color: #94A3B8; border-bottom: 3px solid transparent; font-weight: 600; }
+        .tab-inactive:hover { color: #64748B; }
+        .price-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .price-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        .feature-card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
     </style>
 </head>
 <body class="antialiased">
@@ -283,55 +329,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
             <a href="#app-section" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold text-lg py-4 px-12 rounded-full shadow-lg hover:shadow-blue-200 transition transform hover:-translate-y-1">
                 견적 확인하러 가기
             </a>
-        </div>
-    </section>
-
-    <section class="py-24 bg-white text-center">
-        <div class="max-w-4xl mx-auto px-4">
-            <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-3">"현상설계는 소중한 투자입니다"</h2>
-            <p class="text-xl md:text-2xl font-medium text-slate-600">그 가치를 아는 파트너를 만나세요.</p>
-        </div>
-    </section>
-
-    <section class="py-20 bg-slate-50/50">
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="feature-card-hover bg-white p-10 rounded-[2rem] border border-slate-100 shadow-sm transition duration-300">
-                    <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 text-2xl mb-8 mx-auto">
-                        <i class="fa-solid fa-clock"></i>
-                    </div>
-                    <div class="text-center">
-                        <h3 class="text-xl font-black text-slate-900 mb-4">효율적인 작업을<br>위한 최적의 파트너</h3>
-                        <p class="text-slate-500 leading-relaxed text-sm break-keep">
-                            1인 프리랜서의 기동성과 전문 업체의 시스템을 결합하여, 소장님의 소중한 시간을 아껴드립니다.
-                        </p>
-                    </div>
-                </div>
-
-                <div class="feature-card-hover bg-white p-10 rounded-[2rem] border border-slate-100 shadow-sm transition duration-300">
-                    <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 text-2xl mb-8 mx-auto">
-                        <i class="fa-solid fa-chart-simple"></i>
-                    </div>
-                    <div class="text-center">
-                        <h3 class="text-xl font-black text-slate-900 mb-4">데이터 기반의<br>투명한 견적</h3>
-                        <p class="text-slate-500 leading-relaxed text-sm break-keep">
-                            나라장터 공고 데이터와 프로젝트 규모를 기반으로 산출된, 가장 합리적이고 투명한 표준 가격을 제시합니다.
-                        </p>
-                    </div>
-                </div>
-
-                <div class="feature-card-hover bg-white p-10 rounded-[2rem] border border-slate-100 shadow-sm transition duration-300">
-                    <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 text-2xl mb-8 mx-auto">
-                        <i class="fa-regular fa-lightbulb"></i>
-                    </div>
-                    <div class="text-center">
-                        <h3 class="text-xl font-black text-slate-900 mb-4">설계를 완성시키는<br>전략</h3>
-                        <p class="text-slate-500 leading-relaxed text-sm break-keep">
-                            우리는 건축을 전공한 그래픽 디자이너입니다. 건축적 의도를 가장 잘 살린 '이기는 뷰'를 만듭니다.
-                        </p>
-                    </div>
-                </div>
-            </div>
         </div>
     </section>
 
@@ -360,7 +357,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
                             <i class="fa-solid fa-arrow-right"></i>
                         </button>
                     </div>
-
                     <div id="search-results" class="space-y-4 max-w-4xl mx-auto">
                         <div class="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
                             <p class="text-slate-400 font-medium">검색어를 입력하여 관련 용역을 찾아보세요.</p>
@@ -370,26 +366,36 @@ HTML_PAGE = r"""<!DOCTYPE html>
                 </div>
 
                 <div id="content-recommend" class="hidden">
-                    <div class="bg-slate-50 p-6 rounded-2xl mb-8 border border-slate-100 max-w-3xl mx-auto">
-                        <div class="flex items-center gap-2 mb-4">
-                            <i class="fa-solid fa-filter text-blue-500"></i>
-                            <label class="text-sm font-bold text-slate-700">설계비 범위로 좁혀보기</label>
+                    <div class="flex flex-col md:flex-row gap-6 mb-8 max-w-5xl mx-auto">
+                        <div class="flex-1 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                            <div class="flex items-center gap-2 mb-4">
+                                <i class="fa-solid fa-filter text-blue-500"></i>
+                                <label class="text-sm font-bold text-slate-700">설계비 범위 검색</label>
+                            </div>
+                            <div class="flex flex-col md:flex-row items-center gap-2">
+                                <div class="w-full md:w-auto relative flex-1">
+                                    <input type="number" id="minFee" value="10000" class="w-full p-3 pl-2 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:border-blue-500 transition text-right pr-12">
+                                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">만원</span>
+                                </div>
+                                <span class="text-slate-300">~</span>
+                                <div class="w-full md:w-auto relative flex-1">
+                                    <input type="number" id="maxFee" value="15000" class="w-full p-3 pl-2 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:border-blue-500 transition text-right pr-12">
+                                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">만원</span>
+                                </div>
+                                <button onclick="filterRecommendations()" class="w-full md:w-auto bg-slate-800 text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-900 transition whitespace-nowrap">
+                                    조회
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex flex-col md:flex-row items-center gap-4">
-                            <div class="w-full md:w-1/2 relative">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">최소</span>
-                                <input type="number" id="minFee" value="10000" class="w-full p-3 pl-12 pr-16 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:border-blue-500 transition" placeholder="5000">
-                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">(만원)</span>
+
+                        <div class="w-full md:w-1/3 bg-blue-600 p-6 rounded-2xl text-white flex flex-col justify-between shadow-lg hover:bg-blue-700 transition cursor-pointer" onclick="openSubModal()">
+                            <div>
+                                <h3 class="font-bold text-lg mb-1"><i class="fa-regular fa-envelope mr-2"></i>매일 아침 알림받기</h3>
+                                <p class="text-blue-100 text-sm">설정하신 금액대의 공고가 뜨면<br>메일로 알려드립니다.</p>
                             </div>
-                            <span class="text-slate-300 font-light hidden md:block">~</span>
-                            <div class="w-full md:w-1/2 relative">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">최대</span>
-                                <input type="number" id="maxFee" value="15000" class="w-full p-3 pl-12 pr-16 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:border-blue-500 transition" placeholder="7000">
-                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">(만원)</span>
+                            <div class="mt-4 text-right">
+                                <span class="bg-white/20 px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm">구독하기 &rarr;</span>
                             </div>
-                            <button onclick="filterRecommendations()" class="w-full md:w-auto bg-slate-800 text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-900 transition whitespace-nowrap">
-                                적용하기
-                            </button>
                         </div>
                     </div>
 
@@ -403,86 +409,44 @@ HTML_PAGE = r"""<!DOCTYPE html>
         <div class="max-w-4xl mx-auto px-4">
             <h3 class="text-2xl md:text-3xl font-black text-slate-900 mb-6">위너스케치에서 쉽고 합리적으로.</h3>
             <p class="mb-10 text-slate-500">건축 현상설계 당선을 위한 최적의 파트너</p>
-            
-            <div class="flex justify-center gap-4 mb-16">
-                <button onclick="switchTab('search'); document.getElementById('app-section').scrollIntoView({behavior: 'smooth'})" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full font-bold text-sm transition">
-                    다시 검색하기
-                </button>
-                <a href="mailto:altjr1643@gmail.com" class="px-6 py-3 bg-slate-900 hover:bg-black text-white rounded-full font-bold text-sm transition">
-                    문의하기
-                </a>
-            </div>
-
             <div class="text-xs text-slate-400 border-t border-slate-100 pt-10">
-                <p class="mb-2">위너스케치 | 대표: 홍길동 | 사업자등록번호: 000-00-00000</p>
-                <p>문의: altjr1643@gmail.com | Copyright © WinnerSketch. All rights reserved.</p>
+                <p class="mb-2">위너스케치 | 문의: altjr1643@gmail.com</p>
+                <p>Copyright © WinnerSketch. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
     <div id="pricing-modal" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
-        <div class="bg-white rounded-3xl w-full max-w-6xl my-8 relative shadow-2xl transform transition-all scale-100">
-            <button onclick="closeModal()" class="absolute top-6 right-6 text-slate-300 hover:text-slate-800 text-2xl z-10 w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition">
+        <div class="bg-white rounded-3xl w-full max-w-6xl my-8 relative shadow-2xl">
+            <button onclick="document.getElementById('pricing-modal').classList.add('hidden')" class="absolute top-6 right-6 text-slate-300 hover:text-slate-800 text-2xl w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition">
                 <i class="fa-solid fa-xmark"></i>
             </button>
-            
             <div class="p-8 md:p-12">
                 <div class="text-center mb-12">
-                    <div class="inline-block bg-blue-50 text-blue-600 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wide mb-4">Estimated Quote</div>
                     <h3 id="modal-title" class="text-2xl md:text-3xl font-black text-slate-900 mb-3 break-keep">공모전 제목</h3>
                     <div class="flex items-center justify-center gap-2 text-slate-500">
-                        <i class="fa-solid fa-coins text-yellow-500"></i>
                         <span>공고 설계비:</span>
                         <span id="modal-fee" class="font-bold text-slate-800 text-lg">0원</span>
                     </div>
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="price-card border border-slate-100 rounded-2xl p-8 text-center relative bg-white hover:border-blue-200">
+                    <div class="price-card border border-slate-100 rounded-2xl p-8 text-center">
                         <h4 class="text-lg font-bold text-slate-900 mb-1">BASIC</h4>
                         <div id="price-basic" class="text-3xl font-black text-blue-600 mb-2 font-mono">0원</div>
-                        <p class="text-xs text-slate-400 mb-8 font-medium">실속형 패키지 (80%)</p>
-                        <div class="space-y-4 text-left text-sm text-slate-600 mb-10 pl-2">
-                            <div class="flex items-center"><i class="fa-solid fa-check text-blue-500 w-6"></i> <span>작업 기간: <b>2주</b></span></div>
-                            <div class="flex items-center"><i class="fa-solid fa-check text-blue-500 w-6"></i> <span>컷 장수: <b>총 5컷 이내</b></span></div>
-                            <div class="flex items-center"><i class="fa-solid fa-check text-blue-500 w-6"></i> <span>수정 횟수: <b>2회</b></span></div>
-                            <div class="flex items-center"><i class="fa-solid fa-check text-blue-500 w-6"></i> <span>3D 원본 / 고해상도 제공</span></div>
-                            <div class="flex items-center opacity-40"><i class="fa-solid fa-xmark text-slate-400 w-6"></i> <span>3D 영상 작업</span></div>
-                            <div class="flex items-center opacity-40"><i class="fa-solid fa-xmark text-slate-400 w-6"></i> <span>긴급 작업 지원</span></div>
-                        </div>
+                        <p class="text-xs text-slate-400 mb-8">실속형 패키지 (80%)</p>
                         <a id="link-basic" href="#" target="_blank" class="block w-full py-4 bg-slate-50 text-slate-900 font-bold rounded-xl hover:bg-slate-100 transition border border-slate-200">선택하기</a>
                     </div>
-
-                    <div class="price-card border-2 border-red-500 bg-white rounded-2xl p-8 text-center relative shadow-xl transform md:-translate-y-4 z-10">
-                        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md uppercase tracking-wider">
-                            👑 Premium
-                        </div>
-                        <h4 class="text-lg font-bold text-red-500 mb-1 mt-2">PREMIUM</h4>
+                    <div class="price-card border-2 border-red-500 bg-white rounded-2xl p-8 text-center shadow-xl transform md:-translate-y-4">
+                        <div class="text-red-500 text-xs font-bold mb-2 uppercase">👑 Premium</div>
+                        <h4 class="text-lg font-bold text-red-500 mb-1">PREMIUM</h4>
                         <div id="price-premium" class="text-3xl font-black text-red-500 mb-2 font-mono">0원</div>
-                        <p class="text-xs text-red-400/80 mb-8 font-medium">표준형 패키지 (100%)</p>
-                        <div class="space-y-4 text-left text-sm text-slate-700 mb-10 pl-2">
-                            <div class="flex items-center"><i class="fa-solid fa-check text-red-500 w-6"></i> <span>작업 기간: <b>1주</b></span></div>
-                            <div class="flex items-center"><i class="fa-solid fa-check text-red-500 w-6"></i> <span>컷 장수: <b>무제한</b></span></div>
-                            <div class="flex items-center"><i class="fa-solid fa-check text-red-500 w-6"></i> <span>수정 횟수: <b>무제한</b></span></div>
-                            <div class="flex items-center"><i class="fa-solid fa-check text-red-500 w-6"></i> <span>3D 원본 / 고해상도 제공</span></div>
-                            <div class="flex items-center font-bold text-red-600"><i class="fa-solid fa-check text-red-500 w-6"></i> <span>3D 영상 작업 포함</span></div>
-                            <div class="flex items-center opacity-40"><i class="fa-solid fa-xmark text-slate-400 w-6"></i> <span>긴급 작업 지원</span></div>
-                        </div>
-                        <a id="link-premium" href="#" target="_blank" class="block w-full py-4 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition shadow-lg hover:shadow-red-200">선택하기</a>
+                        <p class="text-xs text-red-400 mb-8">표준형 패키지 (100%)</p>
+                        <a id="link-premium" href="#" target="_blank" class="block w-full py-4 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition">선택하기</a>
                     </div>
-
-                    <div class="price-card border border-slate-100 rounded-2xl p-8 text-center relative bg-white hover:border-blue-200">
+                    <div class="price-card border border-slate-100 rounded-2xl p-8 text-center">
                         <h4 class="text-lg font-bold text-slate-900 mb-1">EXPRESS</h4>
                         <div id="price-express" class="text-3xl font-black text-blue-600 mb-2 font-mono">0원</div>
-                        <p class="text-xs text-slate-400 mb-8 font-medium">긴급형 패키지 (120%)</p>
-                        <div class="space-y-4 text-left text-sm text-slate-600 mb-10 pl-2">
-                            <div class="flex items-center"><i class="fa-solid fa-bolt text-blue-500 w-6"></i> <span>작업 기간: <b>4일 이내</b></span></div>
-                            <div class="flex items-center"><i class="fa-solid fa-check text-green-500 w-6"></i> <span>컷 장수: <b>무제한</b></span></div>
-                            <div class="flex items-center"><i class="fa-solid fa-check text-green-500 w-6"></i> <span>수정 횟수: <b>무제한</b></span></div>
-                            <div class="flex items-center"><i class="fa-solid fa-check text-green-500 w-6"></i> <span>3D 원본 / 고해상도 제공</span></div>
-                            <div class="flex items-center"><i class="fa-solid fa-check text-green-500 w-6"></i> <span>3D 영상 작업 포함</span></div>
-                            <div class="flex items-center font-bold text-blue-600"><i class="fa-solid fa-check text-blue-500 w-6"></i> <span>긴급 작업 지원</span></div>
-                        </div>
+                        <p class="text-xs text-slate-400 mb-8">긴급형 패키지 (120%)</p>
                         <a id="link-express" href="#" target="_blank" class="block w-full py-4 bg-slate-100 text-slate-800 font-bold rounded-xl hover:bg-slate-200 transition border border-slate-200">선택하기</a>
                     </div>
                 </div>
@@ -490,14 +454,52 @@ HTML_PAGE = r"""<!DOCTYPE html>
         </div>
     </div>
 
+    <div id="sub-modal" class="fixed inset-0 bg-black/60 z-[110] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl w-full max-w-md p-8 relative shadow-2xl">
+            <button onclick="document.getElementById('sub-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 class="text-2xl font-black text-slate-900 mb-2">📬 맞춤 공모 알림</h3>
+            <p class="text-slate-500 mb-6 text-sm">원하시는 금액대의 공고가 올라오면<br>매일 아침 이메일로 보내드립니다.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">이메일 주소</label>
+                    <input type="email" id="subEmail" placeholder="example@company.com" class="w-full p-3 border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition">
+                </div>
+                <div class="flex gap-2">
+                    <div class="w-1/2">
+                        <label class="block text-xs font-bold text-slate-600 mb-1">최소 설계비(만원)</label>
+                        <input type="number" id="subMin" value="5000" class="w-full p-3 border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition">
+                    </div>
+                    <div class="w-1/2">
+                        <label class="block text-xs font-bold text-slate-600 mb-1">최대 설계비(만원)</label>
+                        <input type="number" id="subMax" value="50000" class="w-full p-3 border border-slate-200 rounded-xl focus:border-blue-500 outline-none transition">
+                    </div>
+                </div>
+                
+                <div class="bg-slate-50 p-3 rounded-lg flex items-start gap-2 mt-2">
+                    <input type="checkbox" id="subConsent" class="mt-1 w-4 h-4 text-blue-600">
+                    <label for="subConsent" class="text-xs text-slate-500 leading-snug cursor-pointer select-none">
+                        <strong>(필수)</strong> 개인정보 수집 및 광고성 정보 수신에 동의합니다. 수집된 이메일은 맞춤 공고 알림 발송 용도로만 사용되며, 메일 하단 링크를 통해 언제든 수신 거부할 수 있습니다.
+                    </label>
+                </div>
+
+                <button onclick="submitSubscription()" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-black transition shadow-lg mt-2">
+                    무료로 구독하기
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const OWNER_EMAIL = "altjr1643@gmail.com";
 
+        // --- 가격 계산 로직 (기존 유지) ---
         function calculateFeesFrontend(fee) {
             let rate = 1.0;
             let note = "기본 요율";
             let rawQuote = 0;
-
             if (fee < 1000000000) {
                 if (fee >= 300000000) {
                     const base = 300000000;
@@ -517,20 +519,12 @@ HTML_PAGE = r"""<!DOCTYPE html>
                 note = "대형 프로젝트 (0.8%)";
                 rawQuote = fee * 0.008;
             }
-
             let finalQuote = rawQuote;
-            if (rawQuote <= 500000) {
-                finalQuote = rawQuote + 500000;
-            } else if (rawQuote < 1000000) {
-                finalQuote = 1000000;
-            }
-
+            if (rawQuote <= 500000) finalQuote = rawQuote + 500000;
+            else if (rawQuote < 1000000) finalQuote = 1000000;
             const baseQuote = Math.floor(finalQuote / 10000) * 10000;
-
             return {
-                base: baseQuote,
-                rate: rate,
-                note: note,
+                base: baseQuote, rate: rate, note: note,
                 plans: {
                     basic: Math.floor((baseQuote * 0.8) / 10000) * 10000,
                     premium: baseQuote,
@@ -539,6 +533,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
             };
         }
 
+        // --- 탭 전환 ---
         function switchTab(tabName) {
             const searchContent = document.getElementById('content-search');
             const recoContent = document.getElementById('content-recommend');
@@ -559,35 +554,22 @@ HTML_PAGE = r"""<!DOCTYPE html>
             }
         }
 
+        // --- 리스트 렌더링 ---
         function renderList(items, containerId) {
             const container = document.getElementById(containerId);
             container.innerHTML = "";
-
             if (!items || items.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-                        <p class="text-slate-400 font-medium">조건에 맞는 공고가 없습니다.</p>
-                    </div>`;
+                container.innerHTML = `<div class="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200"><p class="text-slate-400 font-medium">조건에 맞는 공고가 없습니다.</p></div>`;
                 return;
             }
-
             items.forEach(item => {
                 const feeText = item.fee > 0 ? item.fee.toLocaleString() + "원 (" + Math.floor(item.fee / 10000).toLocaleString() + "만원)" : "설계비 미공개";
                 const isPriceAvailable = item.fee > 0;
                 const safeTitle = item.title.replace(/"/g, '&quot;');
-                
-                const urlButton = item.url ? 
-                    `<a href="${item.url}" target="_blank" class="w-full text-center px-6 py-3 rounded-xl font-bold text-sm border border-slate-300 text-slate-600 hover:bg-slate-50 transition flex items-center justify-center gap-2 mb-2">
-                        공고 원문 보기 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                     </a>` : '';
-
-                const quoteButton = isPriceAvailable
-                    ? `<button onclick="openPricingModal('${safeTitle}', ${item.fee})" class="w-full bg-blue-50 text-blue-600 hover:bg-blue-100 px-6 py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2">
-                            3D 견적확인 <i class="fa-solid fa-chevron-right"></i>
-                       </button>`
-                    : `<button class="w-full bg-slate-50 text-slate-400 px-6 py-3 rounded-xl font-bold text-sm cursor-not-allowed">
-                            견적 불가
-                       </button>`;
+                const urlButton = item.url ? `<a href="${item.url}" target="_blank" class="w-full text-center px-6 py-3 rounded-xl font-bold text-sm border border-slate-300 text-slate-600 hover:bg-slate-50 transition flex items-center justify-center gap-2 mb-2">공고 원문 보기 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i></a>` : '';
+                const quoteButton = isPriceAvailable ? 
+                    `<button onclick="openPricingModal('${safeTitle}', ${item.fee})" class="w-full bg-blue-50 text-blue-600 hover:bg-blue-100 px-6 py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2">3D 견적확인 <i class="fa-solid fa-chevron-right"></i></button>` : 
+                    `<button class="w-full bg-slate-50 text-slate-400 px-6 py-3 rounded-xl font-bold text-sm cursor-not-allowed">견적 불가</button>`;
 
                 const html = `
                     <div class="bg-white border border-slate-100 rounded-2xl p-8 flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm hover:shadow-md transition group">
@@ -597,18 +579,12 @@ HTML_PAGE = r"""<!DOCTYPE html>
                                 <h4 class="text-xl font-bold text-slate-800 group-hover:text-blue-600 transition line-clamp-1">📄 ${item.title}</h4>
                             </div>
                             <p class="text-sm text-slate-500 font-medium flex items-center gap-2">
-                                <span>${item.agency}</span>
-                                <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
-                                <span>공고일: ${item.notice_date}</span>
+                                <span>${item.agency}</span><span class="w-1 h-1 bg-slate-300 rounded-full"></span><span>공고일: ${item.notice_date}</span>
                             </p>
                             <p class="text-slate-900 font-extrabold mt-3 text-lg">💰 설계비: ${feeText}</p>
                         </div>
-                        <div class="w-full md:w-auto flex flex-col gap-1 min-w-[180px]">
-                            ${urlButton}
-                            ${quoteButton}
-                        </div>
-                    </div>
-                `;
+                        <div class="w-full md:w-auto flex flex-col gap-1 min-w-[180px]">${urlButton}${quoteButton}</div>
+                    </div>`;
                 container.innerHTML += html;
             });
         }
@@ -616,57 +592,34 @@ HTML_PAGE = r"""<!DOCTYPE html>
         async function performSearch() {
             const query = document.getElementById('searchInput').value.trim();
             const container = document.getElementById('search-results');
-            container.innerHTML = `
-                <div class="text-center py-10 text-slate-400">
-                    <i class="fa-solid fa-spinner animate-spin text-3xl mb-3"></i>
-                    <p>검색 중입니다...</p>
-                </div>
-            `;
+            container.innerHTML = `<div class="text-center py-10 text-slate-400"><i class="fa-solid fa-spinner animate-spin text-3xl mb-3"></i><p>검색 중입니다...</p></div>`;
             try {
                 const resp = await fetch('/api/search?q=' + encodeURIComponent(query));
                 const data = await resp.json();
                 renderList(data.items || [], 'search-results');
             } catch (e) {
-                container.innerHTML = `
-                    <div class="text-center py-10 text-red-400">
-                        검색 중 오류가 발생했습니다.
-                    </div>
-                `;
+                container.innerHTML = `<div class="text-center py-10 text-red-400">오류가 발생했습니다.</div>`;
             }
         }
 
         async function filterRecommendations() {
-            const minInput = parseInt(document.getElementById('minFee').value) || 0;
-            const maxInput = parseInt(document.getElementById('maxFee').value) || 999999999999;
-            
-            // 만원 단위를 원 단위로 변환
-            const min = minInput * 10000;
-            const max = maxInput * 10000;
-            
+            const min = (parseInt(document.getElementById('minFee').value) || 0) * 10000;
+            const max = (parseInt(document.getElementById('maxFee').value) || 999999) * 10000;
             const container = document.getElementById('recommend-results');
-            container.innerHTML = `
-                <div class="text-center py-10 text-slate-400">
-                    <i class="fa-solid fa-spinner animate-spin text-3xl mb-3"></i>
-                    <p>추천 공모를 불러오는 중입니다...</p>
-                </div>
-            `;
+            container.innerHTML = `<div class="text-center py-10 text-slate-400"><i class="fa-solid fa-spinner animate-spin text-3xl mb-3"></i><p>추천 공모를 불러오는 중입니다...</p></div>`;
             try {
                 const params = new URLSearchParams({ min: String(min), max: String(max) });
                 const resp = await fetch('/api/recommend?' + params.toString());
                 const data = await resp.json();
                 renderList(data.items || [], 'recommend-results');
             } catch (e) {
-                container.innerHTML = `
-                    <div class="text-center py-10 text-red-400">
-                        추천 리스트 로딩 중 오류가 발생했습니다.
-                    </div>
-                `;
+                container.innerHTML = `<div class="text-center py-10 text-red-400">오류가 발생했습니다.</div>`;
             }
         }
 
+        // --- 견적 모달 ---
         function openPricingModal(title, fee) {
             const result = calculateFeesFrontend(fee);
-            
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-fee').innerText = fee.toLocaleString() + "원";
             document.getElementById('price-basic').innerText = result.plans.basic.toLocaleString() + "원";
@@ -675,25 +628,64 @@ HTML_PAGE = r"""<!DOCTYPE html>
 
             const createLink = (planName, price) => {
                 const subject = `[견적의뢰] ${title} - ${planName} 플랜`;
-                const body = `안녕하세요, 위너스케치 견적 시스템을 통해 문의드립니다.\n\n1. 프로젝트명: ${title}\n2. 공고 설계비: ${fee.toLocaleString()}원\n3. 선택 플랜: ${planName}\n4. 예상 견적가: ${price.toLocaleString()}원 (적용 요율 ${result.rate}%)\n5. 비고: ${result.note}\n\n--------------------------------------------------\n[추가 요청 사항]\n(이곳에 원하시는 작업 범위나 일정을 적어주세요.)\n--------------------------------------------------`;
+                const body = `안녕하세요, 위너스케치 견적 시스템을 통해 문의드립니다.\n\n1. 프로젝트명: ${title}\n2. 공고 설계비: ${fee.toLocaleString()}원\n3. 선택 플랜: ${planName}\n4. 예상 견적가: ${price.toLocaleString()}원\n\n[추가 요청 사항]\n`;
                 return `mailto:${OWNER_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
             };
 
             document.getElementById('link-basic').href = createLink("BASIC", result.plans.basic);
             document.getElementById('link-premium').href = createLink("PREMIUM", result.plans.premium);
             document.getElementById('link-express').href = createLink("EXPRESS", result.plans.express);
-
             document.getElementById('pricing-modal').classList.remove('hidden');
         }
 
-        function closeModal() {
-            document.getElementById('pricing-modal').classList.add('hidden');
+        // --- 구독 관련 기능 ---
+        function openSubModal() {
+            // 추천 탭의 현재 필터 값을 모달에 기본값으로 세팅
+            document.getElementById('subMin').value = document.getElementById('minFee').value;
+            document.getElementById('subMax').value = document.getElementById('maxFee').value;
+            document.getElementById('sub-modal').classList.remove('hidden');
         }
 
-        window.onclick = function(event) {
-            const modal = document.getElementById('pricing-modal');
-            if (event.target == modal) {
-                closeModal();
+        async function submitSubscription() {
+            const email = document.getElementById('subEmail').value;
+            const min = document.getElementById('subMin').value * 10000;
+            const max = document.getElementById('subMax').value * 10000;
+            const consent = document.getElementById('subConsent').checked;
+
+            if(!email || !email.includes('@')) {
+                alert('유효한 이메일 주소를 입력해주세요.');
+                return;
+            }
+            if(!consent) {
+                alert('개인정보 수집 및 정보 수신에 동의해야 합니다.');
+                return;
+            }
+
+            // UI 로딩 표시
+            const btn = document.querySelector('#sub-modal button');
+            const originalText = btn.innerText;
+            btn.innerText = "처리 중...";
+            btn.disabled = true;
+
+            try {
+                const resp = await fetch('/api/subscribe', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({email: email, min_fee: min, max_fee: max, marketing: true})
+                });
+                const data = await resp.json();
+                
+                if(data.success) {
+                    alert('구독이 완료되었습니다! 입력하신 이메일로 확인 메일을 보냈습니다.');
+                    document.getElementById('sub-modal').classList.add('hidden');
+                } else {
+                    alert('오류: ' + data.msg);
+                }
+            } catch(e) {
+                alert('통신 오류가 발생했습니다.');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
         }
     </script>
@@ -701,9 +693,8 @@ HTML_PAGE = r"""<!DOCTYPE html>
 </html>
 """
 
-
 # ==============================
-# 4. Flask 라우트
+# 5. Flask 라우트 정의
 # ==============================
 
 @app.route("/")
@@ -714,46 +705,166 @@ def index():
 @app.get("/api/search")
 def api_search():
     q = request.args.get("q", "").strip()
-    if not q:
-        return jsonify({"items": []})
-
-    items, _logs = get_competition_data(q, rows=100, strict_mode=False)
+    if not q: return jsonify({"items": []})
+    items, _ = get_competition_data(q, rows=100, strict_mode=False)
     return jsonify({"items": items})
 
 
 @app.get("/api/recommend")
 def api_recommend():
-    try:
-        min_fee = int(request.args.get("min", "0") or 0)
-    except ValueError:
-        min_fee = 0
-
-    try:
-        max_fee = int(request.args.get("max", "999999999999") or 999999999999)
-    except ValueError:
-        max_fee = 999999999999
+    try: min_fee = int(request.args.get("min", "0") or 0)
+    except: min_fee = 0
+    try: max_fee = int(request.args.get("max", "999999999999") or 999999999999)
+    except: max_fee = 999999999999
 
     keywords = ["건축설계", "설계공모", "실시설계", "리모델링"]
     merged = []
     seen = set()
 
+    # 추천은 최신 200개 정도만 긁어서 필터링
     for kw in keywords:
-        res, _ = get_competition_data(kw, rows=200, strict_mode=True)
+        res, _ = get_competition_data(kw, rows=100, strict_mode=True, days=30)
         for item in res:
             uid = f"{item['title']}_{item['agency']}"
-            if uid in seen:
-                continue
+            if uid in seen: continue
             seen.add(uid)
-            if not (min_fee <= item["fee"] <= max_fee):
-                continue
+            if not (min_fee <= item["fee"] <= max_fee): continue
             merged.append(item)
 
-    merged.sort(
-        key=lambda x: x["notice_date"] if x["notice_date"] != "-" else "0000-00-00",
-        reverse=True,
-    )
-
+    merged.sort(key=lambda x: x["notice_date"], reverse=True)
     return jsonify({"items": merged})
+
+
+# ------------------------------
+# 구독 관련 API
+# ------------------------------
+
+@app.post("/api/subscribe")
+def api_subscribe():
+    data = request.json
+    email = data.get("email")
+    min_fee = int(data.get("min_fee", 0))
+    max_fee = int(data.get("max_fee", 999999999999))
+    marketing = 1 if data.get("marketing", False) else 0
+    
+    if not email:
+        return jsonify({"success": False, "msg": "이메일을 입력해주세요."})
+    
+    token = str(uuid.uuid4()) # 고유 토큰 생성
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        # 이미 존재하면 업데이트 (UPSERT)
+        c.execute("""INSERT OR REPLACE INTO subscribers 
+                     (email, min_fee, max_fee, token, marketing_agreed, created_at) 
+                     VALUES (?, ?, ?, ?, ?, ?)""", 
+                  (email, min_fee, max_fee, token, marketing, now))
+        conn.commit()
+        conn.close()
+        
+        # 환영 메일 발송
+        manage_link = f"http://localhost:8000/manage/{token}"
+        send_email(email, "[위너스케치] 구독이 완료되었습니다.", 
+                   f"""
+                   <h2>환영합니다!</h2>
+                   <p>위너스케치 공모 알림 구독이 완료되었습니다.</p>
+                   <p>설정하신 조건: <strong>{min_fee//10000}만 ~ {max_fee//10000}만원</strong></p>
+                   <p>내일부터 매일 아침 08:30에 조건에 맞는 새로운 공고를 보내드립니다.</p>
+                   <hr>
+                   <a href='{manage_link}'>구독 설정 관리하기</a>
+                   """)
+        
+        return jsonify({"success": True, "msg": "구독이 완료되었습니다."})
+    except Exception as e:
+        return jsonify({"success": False, "msg": str(e)})
+
+
+@app.get("/manage/<token>")
+def manage_page(token):
+    """구독 관리 페이지 (HTML 렌더링)"""
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    user = c.execute("SELECT * FROM subscribers WHERE token=?", (token,)).fetchone()
+    conn.close()
+    
+    if not user:
+        return "<h3>유효하지 않거나 만료된 링크입니다.</h3>"
+    
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>구독 관리</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full">
+            <h2 class="text-2xl font-bold mb-6 text-slate-800">구독 설정 변경</h2>
+            <div class="mb-6 p-4 bg-blue-50 text-blue-800 rounded-lg text-sm">
+                현재 이메일: <strong>{user['email']}</strong>
+            </div>
+            
+            <form action="/api/update_subscription" method="POST" class="space-y-4">
+                <input type="hidden" name="token" value="{token}">
+                <div>
+                    <label class="block text-sm font-bold text-slate-600 mb-1">최소 설계비 (원)</label>
+                    <input type="number" name="min_fee" value="{user['min_fee']}" class="w-full p-3 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-600 mb-1">최대 설계비 (원)</label>
+                    <input type="number" name="max_fee" value="{user['max_fee']}" class="w-full p-3 border rounded-lg">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700">설정 저장하기</button>
+            </form>
+            
+            <hr class="my-8">
+            
+            <form action="/api/unsubscribe" method="POST" onsubmit="return confirm('정말 구독을 취소하시겠습니까?');">
+                <input type="hidden" name="token" value="{token}">
+                <button type="submit" class="w-full text-red-500 text-sm font-bold hover:underline">
+                    더 이상 메일을 받지 않겠습니다 (구독 취소)
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <a href="/" class="text-slate-400 text-sm hover:text-slate-600">홈으로 돌아가기</a>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+@app.post("/api/update_subscription")
+def update_subscription():
+    token = request.form.get("token")
+    min_fee = request.form.get("min_fee")
+    max_fee = request.form.get("max_fee")
+    conn = sqlite3.connect(DB_FILE)
+    conn.execute("UPDATE subscribers SET min_fee=?, max_fee=? WHERE token=?", (min_fee, max_fee, token))
+    conn.commit()
+    conn.close()
+    return "<script>alert('수정되었습니다.'); window.location.href='/manage/" + token + "';</script>"
+
+
+@app.post("/api/unsubscribe")
+def unsubscribe():
+    token = request.form.get("token")
+    conn = sqlite3.connect(DB_FILE)
+    conn.execute("DELETE FROM subscribers WHERE token=?", (token,))
+    conn.commit()
+    conn.close()
+    return """
+    <div style="text-align:center; padding-top:50px;">
+        <h2>구독이 취소되었습니다.</h2>
+        <p>그동안 이용해주셔서 감사합니다.</p>
+        <a href="/">홈으로 가기</a>
+    </div>
+    """
 
 
 if __name__ == "__main__":
