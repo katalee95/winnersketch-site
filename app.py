@@ -730,10 +730,32 @@ def index():
 @app.get("/api/search")
 def api_search():
     q = request.args.get("q", "").strip()
+    # q가 없으면 빈 리스트 반환
     if not q:
         return jsonify({"items": []})
 
     items, _logs = get_competition_data(q, rows=100, strict_mode=False)
+
+    # [추가됨] 수동 데이터 검색
+    for manual_item in MANUAL_DATA:
+        if q in manual_item["title"] or q in manual_item["agency"]:
+            # 중복 체크
+            is_duplicate = False
+            for api_item in items:
+                if (api_item["title"] == manual_item["title"] and 
+                    api_item["agency"] == manual_item["agency"]):
+                    is_duplicate = True
+                    break
+            
+            if not is_duplicate:
+                items.append(manual_item)
+
+    # 날짜순 정렬
+    items.sort(
+        key=lambda x: x["deadline"] if x["deadline"] != "-" else "0000-00-00",
+        reverse=False,
+    )
+
     return jsonify({"items": items})
 
 
