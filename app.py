@@ -274,7 +274,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
         <div class="max-w-5xl mx-auto">
             <p class="text-lg md:text-xl font-bold text-slate-500 mb-6 tracking-tight">현상설계 스케치업의 모든 것</p>
             <h1 class="text-4xl md:text-6xl font-black text-slate-900 leading-tight mb-12 tracking-tight whitespace-nowrap">
-                위너스케치에서 쉽고 빠르게 주훈이가 합리적으로.
+                위너스케치에서 쉽고 합리적으로.
             </h1>
             <a href="#app-section" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold text-lg py-4 px-12 rounded-full shadow-lg hover:shadow-blue-200 transition transform hover:-translate-y-1">
                 견적 확인하러 가기
