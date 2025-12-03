@@ -1,5 +1,6 @@
 import math
 import json
+import re  # 정규식 모듈
 from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
 from urllib.parse import quote as url_quote
@@ -14,31 +15,7 @@ from flask import Flask, request, Response, jsonify
 app = Flask(__name__)
 
 # 🔑 공공데이터포털 나라장터 API 키
-#   - 당장은 하드코딩해두고, 나중에 환경변수로 빼는 걸 추천
-REAL_API_KEY = "7bab15bfb6883de78a3e2720338237530938fbeca5a7f4038ef1dfd0450dca48"  # <- 이 줄만 너 키로 바꾸기
-
-# ✅ [수동 데이터 추가] 프로젝트 서울 등 외부 공모전 데이터베이스
-# 이곳에 원하는 공모전을 계속 추가하면 추천 리스트에 자동으로 뜹니다.
-MANUAL_DATA = [
-    {
-        "title": "서리풀 보이는 수장고 국제설계공모",
-        "agency": "서울특별시",
-        "fee": 5800000000,  # 콤마 없이 숫자만
-        "deadline": "2025-12-31"
-    },
-    {
-        "title": "서울형 키즈카페 건립 설계공모",
-        "agency": "서울시",
-        "fee": 250000000,
-        "deadline": "2025-10-15"
-    },
-    {
-        "title": "노들섬 디자인 공모 (글로벌)",
-        "agency": "서울특별시 도시공간기획과",
-        "fee": 1500000000,
-        "deadline": "2025-11-20"
-    }
-]
+REAL_API_KEY = "7bab15bfb6883de78a3e2720338237530938fbeca5a7f4038ef1dfd0450dca48" 
 
 
 # ==============================
@@ -47,7 +24,6 @@ MANUAL_DATA = [
 
 def parse_api_response(response):
     """JSON 또는 XML 응답을 items 리스트로 변환"""
-    # 1) JSON 시도
     try:
         data = response.json()
         body = data.get("response", {}).get("body", {})
@@ -56,7 +32,6 @@ def parse_api_response(response):
     except json.JSONDecodeError:
         pass
 
-    # 2) XML 시도
     try:
         root = ET.fromstring(response.text)
         items = []
@@ -72,7 +47,7 @@ def parse_api_response(response):
 
 def fetch_data_from_url(base_url, params, api_key):
     headers = {"User-Agent": "Mozilla/5.0"}
-
+    
     if "%" in api_key:
         final_key = api_key
     else:
@@ -183,12 +158,32 @@ def get_competition_data(keyword, rows=100, strict_mode=False):
         except Exception:
             price = 0
 
-        deadline_raw = item.get("bidClseDt", "-") or "-"
-        # "YYYYMMDDHHMM" → "YYYY-MM-DD" 정도로 단순 포맷
-        if len(deadline_raw) >= 8:
-            deadline = f"{deadline_raw[0:4]}-{deadline_raw[4:6]}-{deadline_raw[6:8]}"
+        # ========== [수정됨] 날짜 필드 다중 검색 및 파싱 강화 ==========
+        # 설계공모는 bidClseDt(입찰마감) 대신 referReqstDt(참가등록마감) 등에 날짜가 있는 경우가 많음
+        candidate_keys = ["bidClseDt", "referReqstDt", "thbidCcmlDt", "prpslSbmsnClseDt"]
+        
+        deadline_str = ""
+        for key in candidate_keys:
+            val = str(item.get(key, "") or "")
+            # 값이 존재하고 'null' 문자열이 아니면 채택
+            if val and val.lower() != "null" and len(val) > 5:
+                deadline_str = val
+                break
+        
+        # 숫자만 추출 (2025/12/08 17:00 -> 202512081700)
+        deadline_digits = re.sub(r'[^0-9]', '', deadline_str)
+        
+        if len(deadline_digits) >= 8:
+            deadline = f"{deadline_digits[0:4]}-{deadline_digits[4:6]}-{deadline_digits[6:8]}"
         else:
             deadline = "-"
+        # ========================================================
+
+        # 공고 URL 생성
+        url_link = item.get("bidNtceDtlUrl", "") or item.get("bidNtceUrl", "")
+        if not url_link and bid_id:
+            bid_ord = item.get("bidNtceOrd", "01") 
+            url_link = f"https://www.g2b.go.kr:8081/ep/invitation/publish/bidInfoDtl.do?bidno={bid_id}&bidseq={bid_ord}&releaseYn=Y&taskClCd=1"
 
         cleaned.append(
             {
@@ -196,10 +191,11 @@ def get_competition_data(keyword, rows=100, strict_mode=False):
                 "agency": agency,
                 "fee": price,
                 "deadline": deadline,
+                "url": url_link,
             }
         )
 
-    # 마감일 기준 정렬 (최신/가까운 순)
+    # 마감일 기준 정렬
     cleaned.sort(
         key=lambda x: x["deadline"] if x["deadline"] != "-" else "0000-00-00",
         reverse=False,
@@ -209,8 +205,7 @@ def get_competition_data(keyword, rows=100, strict_mode=False):
 
 
 # ==============================
-# 3. HTML 템플릿 (네가 준 디자인)
-#    - JS 부분은 mockData 제거하고, /api/search /api/recommend 호출하게 수정
+# 3. HTML 템플릿
 # ==============================
 
 HTML_PAGE = r"""<!DOCTYPE html>
@@ -220,13 +215,10 @@ HTML_PAGE = r"""<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>위너스케치 - 건축 현상설계 파트너</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Pretendard Font -->
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 
     <style>
@@ -280,7 +272,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
 </head>
 <body class="antialiased">
 
-    <!-- Navigation -->
     <nav class="w-full py-5 px-6 flex justify-between items-center bg-white sticky top-0 z-50 border-b border-slate-100">
         <div class="max-w-7xl mx-auto w-full flex justify-between items-center">
             <div class="text-2xl font-black text-slate-900 tracking-tighter cursor-pointer" onclick="window.scrollTo(0,0)">
@@ -292,7 +283,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
         </div>
     </nav>
 
-    <!-- Hero -->
     <section class="pt-24 pb-32 px-4 text-center bg-white">
         <div class="max-w-5xl mx-auto">
             <p class="text-lg md:text-xl font-bold text-slate-500 mb-6 tracking-tight">현상설계 스케치업의 모든 것</p>
@@ -305,7 +295,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
         </div>
     </section>
 
-    <!-- Quote -->
     <section class="py-24 bg-white text-center">
         <div class="max-w-4xl mx-auto px-4">
             <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-3">"현상설계는 소중한 투자입니다"</h2>
@@ -313,7 +302,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
         </div>
     </section>
 
-    <!-- Features -->
     <section class="py-20 bg-slate-50/50">
         <div class="max-w-6xl mx-auto px-4">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -356,15 +344,13 @@ HTML_PAGE = r"""<!DOCTYPE html>
         </div>
     </section>
 
-    <!-- App Section -->
     <section id="app-section" class="py-24 bg-white">
         <div class="max-w-6xl mx-auto px-4">
             <div class="text-center mb-16">
-                <h2 class="text-2xl md:text-3xl font-black text-slate-900 mb-3">3D 전문 모델링 지원이 필요한 설계공모 리스트를</h2>
-                <p class="text-xl md:text-2xl font-bold text-slate-900">검색하고 위너스케치의 작업 견적을 확인해보세요.</p>
+                <h2 class="text-2xl md:text-3xl font-black text-slate-900 mb-3">스케치업 3D모델링 지원이 필요한</h2>
+                <p class="text-xl md:text-2xl font-bold text-slate-900">건축설계공모를 검색해보세요!</p>
             </div>
 
-            <!-- Tabs -->
             <div class="flex justify-center gap-8 mb-12">
                 <button id="tab-search" class="tab-active pb-3 px-2 text-lg transition" onclick="switchTab('search')">
                     <i class="fa-solid fa-magnifying-glass mr-2 text-sm"></i>용역 검색
@@ -374,9 +360,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                 </button>
             </div>
 
-            <!-- Contents -->
             <div class="w-full">
-                <!-- Search Tab -->
                 <div id="content-search" class="block">
                     <div class="relative mb-10 max-w-2xl mx-auto">
                         <input type="text" id="searchInput" placeholder="공모전 명칭 입력 (예: 해미면, 태화강, 도서관)" 
@@ -394,7 +378,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     </div>
                 </div>
 
-                <!-- Recommend Tab -->
                 <div id="content-recommend" class="hidden">
                     <div class="bg-slate-50 p-6 rounded-2xl mb-8 border border-slate-100 max-w-3xl mx-auto">
                         <div class="flex items-center gap-2 mb-4">
@@ -423,7 +406,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
         </div>
     </section>
 
-    <!-- Footer -->
     <footer class="bg-white border-t border-slate-100 py-20 text-center mt-20">
         <div class="max-w-4xl mx-auto px-4">
             <h3 class="text-2xl md:text-3xl font-black text-slate-900 mb-6">위너스케치에서 쉽고 합리적으로.</h3>
@@ -431,7 +413,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
             
             <div class="flex justify-center gap-4 mb-16">
                 <button onclick="switchTab('search'); document.getElementById('app-section').scrollIntoView({behavior: 'smooth'})" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full font-bold text-sm transition">
-                    포트폴리오
+                    다시 검색하기
                 </button>
                 <a href="mailto:altjr1643@gmail.com" class="px-6 py-3 bg-slate-900 hover:bg-black text-white rounded-full font-bold text-sm transition">
                     문의하기
@@ -445,7 +427,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
         </div>
     </footer>
 
-    <!-- Pricing Modal -->
     <div id="pricing-modal" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
         <div class="bg-white rounded-3xl w-full max-w-6xl my-8 relative shadow-2xl transform transition-all scale-100">
             <button onclick="closeModal()" class="absolute top-6 right-6 text-slate-300 hover:text-slate-800 text-2xl z-10 w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition">
@@ -516,7 +497,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
         </div>
     </div>
 
-    <!-- JS: Python API와 연동 -->
     <script>
         const OWNER_EMAIL = "altjr1643@gmail.com";
 
@@ -602,13 +582,26 @@ HTML_PAGE = r"""<!DOCTYPE html>
                 const feeText = item.fee > 0 ? item.fee.toLocaleString() + "원" : "설계비 미공개";
                 const isPriceAvailable = item.fee > 0;
                 const safeTitle = item.title.replace(/"/g, '&quot;');
+                
+                const urlButton = item.url ? 
+                    `<a href="${item.url}" target="_blank" class="w-full text-center px-6 py-3 rounded-xl font-bold text-sm border border-slate-300 text-slate-600 hover:bg-slate-50 transition flex items-center justify-center gap-2 mb-2">
+                        공고 원문 보기 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                     </a>` : '';
+
+                const quoteButton = isPriceAvailable
+                    ? `<button onclick="openPricingModal('${safeTitle}', ${item.fee})" class="w-full bg-blue-50 text-blue-600 hover:bg-blue-100 px-6 py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2">
+                            3D 견적확인 <i class="fa-solid fa-chevron-right"></i>
+                       </button>`
+                    : `<button class="w-full bg-slate-50 text-slate-400 px-6 py-3 rounded-xl font-bold text-sm cursor-not-allowed">
+                            견적 불가
+                       </button>`;
 
                 const html = `
                     <div class="bg-white border border-slate-100 rounded-2xl p-8 flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm hover:shadow-md transition group">
-                        <div class="mb-4 md:mb-0">
+                        <div class="mb-4 md:mb-0 md:flex-1 md:pr-8">
                             <div class="flex items-center gap-3 mb-2">
                                 <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded">공고</span>
-                                <h4 class="text-xl font-bold text-slate-800 group-hover:text-blue-600 transition">📄 ${item.title}</h4>
+                                <h4 class="text-xl font-bold text-slate-800 group-hover:text-blue-600 transition line-clamp-1">📄 ${item.title}</h4>
                             </div>
                             <p class="text-sm text-slate-500 font-medium flex items-center gap-2">
                                 <span>${item.agency}</span>
@@ -617,16 +610,9 @@ HTML_PAGE = r"""<!DOCTYPE html>
                             </p>
                             <p class="text-slate-900 font-extrabold mt-3 text-lg">💰 설계비: ${feeText}</p>
                         </div>
-                        <div>
-                            ${
-                                isPriceAvailable
-                                ? `<button onclick="openPricingModal('${safeTitle}', ${item.fee})" class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-6 py-3 rounded-xl font-bold text-sm transition flex items-center gap-2">
-                                        가격제안보기 <i class="fa-solid fa-chevron-down"></i>
-                                   </button>`
-                                : `<button class="bg-slate-50 text-slate-400 px-6 py-3 rounded-xl font-bold text-sm cursor-not-allowed">
-                                        견적 불가
-                                   </button>`
-                            }
+                        <div class="w-full md:w-auto flex flex-col gap-1 min-w-[180px]">
+                            ${urlButton}
+                            ${quoteButton}
                         </div>
                     </div>
                 `;
@@ -730,38 +716,15 @@ def index():
 @app.get("/api/search")
 def api_search():
     q = request.args.get("q", "").strip()
-    # q가 없으면 빈 리스트 반환
     if not q:
         return jsonify({"items": []})
 
     items, _logs = get_competition_data(q, rows=100, strict_mode=False)
-
-    # [추가됨] 수동 데이터 검색
-    for manual_item in MANUAL_DATA:
-        if q in manual_item["title"] or q in manual_item["agency"]:
-            # 중복 체크
-            is_duplicate = False
-            for api_item in items:
-                if (api_item["title"] == manual_item["title"] and 
-                    api_item["agency"] == manual_item["agency"]):
-                    is_duplicate = True
-                    break
-            
-            if not is_duplicate:
-                items.append(manual_item)
-
-    # 날짜순 정렬
-    items.sort(
-        key=lambda x: x["deadline"] if x["deadline"] != "-" else "0000-00-00",
-        reverse=False,
-    )
-
     return jsonify({"items": items})
 
 
 @app.get("/api/recommend")
 def api_recommend():
-    # ... (min_fee, max_fee 파라미터 파싱 부분 생략) ...
     try:
         min_fee = int(request.args.get("min", "0") or 0)
     except ValueError:
@@ -772,7 +735,6 @@ def api_recommend():
     except ValueError:
         max_fee = 999999999999
 
-    # 1. 나라장터 데이터 수집 (기존 로직)
     keywords = ["건축설계", "설계공모", "실시설계", "리모델링"]
     merged = []
     seen = set()
@@ -788,36 +750,6 @@ def api_recommend():
                 continue
             merged.append(item)
 
-    # ✅ [추가됨] 2. 수동 데이터(MANUAL_DATA) 합치기
-    for item in MANUAL_DATA:
-        uid = f"{item['title']}_{item['agency']}"
-        
-        # 이미 리스트에 있으면 패스
-        if uid in seen:
-            continue
-        
-        # 금액 필터링 적용 (범위에 안 맞으면 패스)
-        if not (min_fee <= item["fee"] <= max_fee):
-            continue
-            
-        merged.append(item)
-        seen.add(uid)
-
-        # 최상단 고정을 위한 정렬
-    # MANUAL_DATA에 있는 항목을 우선적으로 배치 (0순위), 나머지는 1순위
-    manual_titles = set(m['title'] for m in MANUAL_DATA)
-    
-    merged.sort(
-        key=lambda x: (
-            0 if x['title'] in manual_titles else 1,  # 수동 데이터 우선 (0)
-            x["deadline"] if x["deadline"] != "-" else "0000-00-00" # 그 다음 마감일 순
-        ),
-        reverse=False,
-    )
-    
-    return jsonify({"items": merged})
-
-    # 정렬 및 반환
     merged.sort(
         key=lambda x: x["deadline"] if x["deadline"] != "-" else "0000-00-00",
         reverse=False,
@@ -825,9 +757,6 @@ def api_recommend():
 
     return jsonify({"items": merged})
 
-# ==============================
-# 5. 서버 실행 (이 부분이 없으면 꺼짐)
-# ==============================
-if __name__ == '__main__':
-    # debug=True로 하면 코드 수정 시 자동 재시작되어 편리합니다.
-    app.run(debug=True, host='0.0.0.0', port=5000)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8000, debug=True)
