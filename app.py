@@ -250,7 +250,7 @@ def job_send_daily_emails():
         
         if user_items:
             token = user['token']
-            manage_link = f"http://localhost:8000/manage/{token}"
+            manage_link = f"https://www.winnersketch.kr/manage/{token}"
             
             html_body = f"""
             <div style="font-family:'Malgun Gothic', sans-serif; max-width:600px; margin:0 auto; padding:20px; border:1px solid #ddd; border-radius:10px;">
@@ -348,7 +348,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
         <div class="max-w-5xl mx-auto">
             <p class="text-lg md:text-xl font-bold text-slate-500 mb-6 tracking-tight">현상설계 스케치업의 모든 것</p>
             <h1 class="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-slate-900 leading-snug mb-8 sm:mb-12 tracking-tight">
-                위너스케치에서<br class="block sm:hidden">
+                위너스케치에서<br>
                 <span class="text-blue-500">쉽고 합리적으로</span>
             </h1>
             <a href="#app-section" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold text-lg py-4 px-12 rounded-full shadow-lg hover:shadow-blue-200 transition transform hover:-translate-y-1">
@@ -898,7 +898,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                 return;
             }
             items.forEach(item => {
-                const feeText = item.fee > 0 ? item.fee.toLocaleString() + "원 (" + Math.floor(item.fee / 10000).toLocaleString() + "만원)" : "설계비 미공개";
+                const feeText = item.fee > 0 ? item.fee.toLocaleString() + "원" : "설계비 미공개";
                 const isPriceAvailable = item.fee > 0;
                 const safeTitle = item.title.replace(/"/g, '&quot;');
                 const urlButton = item.url ? `<a href="${item.url}" target="_blank" class="w-full text-center px-6 py-3 rounded-xl font-bold text-sm border border-slate-300 text-slate-600 hover:bg-slate-50 transition flex items-center justify-center gap-2 mb-2">공고 원문 보기 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i></a>` : '';
@@ -1227,7 +1227,7 @@ def api_subscribe():
         conn.commit()
         conn.close()
         
-        manage_link = f"http://localhost:8000/manage/{token}"
+        manage_link = f"https://www.winnersketch.kr/manage/{token}"
         send_email(email, "[위너스케치] 구독이 완료되었습니다.", 
                    f"""
                    <h2>환영합니다!</h2>
@@ -1453,17 +1453,6 @@ def contact_request():
         print(f"[ERROR] 문의 요청 실패: {e}")
         return jsonify({"success": False, "msg": str(e)})
 
-# 🏥 Health Check 엔드포인트 (UptimeRobot용 - Sleep 방지)
-@app.get("/health")
-def health_check():
-    """핑 서비스용 헬스체크 엔드포인트"""
-    return jsonify({
-        "status": "ok",
-        "timestamp": datetime.now().isoformat(),
-        "message": "Server is alive! 🚀"
-    })
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
-    
-    
