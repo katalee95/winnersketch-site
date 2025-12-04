@@ -4,13 +4,10 @@ import json
 import re
 import uuid
 import sqlite3
-import smtplib
 from datetime import datetime, timedelta
 import time
 import xml.etree.ElementTree as ET
 from urllib.parse import quote as url_quote
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 import requests
 from flask import Flask, request, Response, jsonify
@@ -25,21 +22,8 @@ app = Flask(__name__)
 # 🔑 공공데이터포털 나라장터 API 키
 REAL_API_KEY = "7bab15bfb6883de78a3e2720338237530938fbeca5a7f4038ef1dfd0450dca48"
 
-# 📧 SendGrid 설정 (Render 호환)
-# SendGrid 가입: https://sendgrid.com
-# API Key 생성 후 아래에 입력하세요
-SMTP_SERVER = "smtp.sendgrid.net"
-SMTP_PORT = 587
-SMTP_USER = "apikey"
-SMTP_PASSWORD = os.environ.get("SENDGRID_API_KEY", "")  # 환경변수에서 가져오기
-
-# ⚠️ 중요: SendGrid API Key 받는 방법
-# 1. https://sendgrid.com 가입 (무료)
-# 2. Settings > API Keys 메뉴
-# 3. "Create API Key" 클릭
-# 4. Name: "WinnerSketch"
-# 5. Permissions: "Full Access" 선택
-# 6. 생성된 키를 위 SMTP_PASSWORD에 입력
+# 📧 SendGrid API 설정 (HTTP API 사용 - SMTP 포트 차단 문제 해결)
+# Render 무료 플랜에서는 SMTP 포트(587)가 차단되므로 SendGrid HTTP API 사용
 
 # 💾 데이터베이스 파일명
 DB_FILE = "subscribers.db"
@@ -71,28 +55,58 @@ init_db()
 # ==============================
 
 def send_email(to_email, subject, html_content):
-    """Gmail 발송 함수 (TLS 587 포트 사용)"""
+    """SendGrid API를 통한 메일 발송 (SMTP 포트 차단 문제 해결)"""
     try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"] = "위너스케치 <winnersketch.kr@gmail.com>"  # SendGrid에서 인증된 발신자 이메일
-        msg["To"] = to_email
-
-        part = MIMEText(html_content, "html")
-        msg.attach(part)
-
-        # Gmail 접속 및 발송
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()  # 보안 연결 시작
-            server.login(SMTP_USER, SMTP_PASSWORD)
-            server.sendmail(SMTP_USER, to_email, msg.as_string())
+        api_key = os.environ.get("SENDGRID_API_KEY", "")
+        
+        # 디버깅
+        api_key_length = len(api_key) if api_key else 0
+        print(f"[DEBUG] SendGrid API Key length: {api_key_length}")
+        
+        if not api_key or api_key_length < 10:
+            print(f"[ERROR] SendGrid API Key가 설정되지 않았습니다!")
+            return False
+        
+        # SendGrid API 호출
+        url = "https://api.sendgrid.com/v3/mail/send"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        data = {
+            "personalizations": [
+                {
+                    "to": [{"email": to_email}],
+                    "subject": subject
+                }
+            ],
+            "from": {
+                "email": "winnersketch.kr@gmail.com",
+                "name": "위너스케치"
+            },
+            "content": [
+                {
+                    "type": "text/html",
+                    "value": html_content
+                }
+            ]
+        }
+        
+        response = requests.post(url, headers=headers, json=data, timeout=10)
+        
+        if response.status_code == 202:
+            print(f"[메일발송성공] {to_email}")
+            return True
+        else:
+            print(f"[메일발송실패] Status: {response.status_code}, Response: {response.text}")
+            return False
             
-        print(f"[메일발송성공] {to_email}")
-        return True
     except Exception as e:
         print(f"[메일발송실패] {e}")
+        import traceback
+        traceback.print_exc()
         return False
-
 def parse_api_response(response):
     try:
         data = response.json()
