@@ -24,11 +24,21 @@ app = Flask(__name__)
 # 🔑 공공데이터포털 나라장터 API 키
 REAL_API_KEY = "7bab15bfb6883de78a3e2720338237530938fbeca5a7f4038ef1dfd0450dca48"
 
-# 📧 Gmail 설정 (변경됨)
-SMTP_SERVER = "smtp.gmail.com"
+# 📧 SendGrid 설정 (Render 호환)
+# SendGrid 가입: https://sendgrid.com
+# API Key 생성 후 아래에 입력하세요
+SMTP_SERVER = "smtp.sendgrid.net"
 SMTP_PORT = 587
-SMTP_USER = "winnersketch.kr@gmail.com"  # 🟢 새로 만드신 계정
-SMTP_PASSWORD = "ooedozuheenpwwxd"  # 🔴🔴🔴 (띄어쓰기 없이 입력하세요)
+SMTP_USER = "apikey"  # 이 값은 그대로 "apikey"로 유지
+SMTP_PASSWORD = "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"  # 🔴 SendGrid API Key로 교체 필요!
+
+# ⚠️ 중요: SendGrid API Key 받는 방법
+# 1. https://sendgrid.com 가입 (무료)
+# 2. Settings > API Keys 메뉴
+# 3. "Create API Key" 클릭
+# 4. Name: "WinnerSketch"
+# 5. Permissions: "Full Access" 선택
+# 6. 생성된 키를 위 SMTP_PASSWORD에 입력
 
 # 💾 데이터베이스 파일명
 DB_FILE = "subscribers.db"
@@ -64,7 +74,7 @@ def send_email(to_email, subject, html_content):
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
-        msg["From"] = f"위너스케치 <{SMTP_USER}>"
+        msg["From"] = "위너스케치 <winnersketch.kr@gmail.com>"  # SendGrid에서 인증된 발신자 이메일
         msg["To"] = to_email
 
         part = MIMEText(html_content, "html")
@@ -623,14 +633,13 @@ HTML_PAGE = r"""<!DOCTYPE html>
                         <span>공고 설계비:</span>
                         <span id="modal-fee" class="font-bold text-slate-800 text-lg">0원</span>
                     </div>
-                    <p class="text-xs text-slate-400 mt-2">VAT 포함</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-4">
                     <div class="price-card border border-slate-100 rounded-2xl p-8 text-center relative bg-white hover:border-blue-200">
                         <h4 class="text-lg font-bold text-slate-900 mb-1">BASIC</h4>
                         <div id="price-basic" class="text-3xl font-black text-blue-600 mb-2 font-mono">0원</div>
-                        <p class="text-xs text-slate-400 mb-8 font-medium">실속형 패키지 <span class="text-slate-400">(VAT 포함)</span></p>
+                        <p class="text-xs text-slate-400 mb-8 font-medium">실속형 패키지</p>
                         <div class="space-y-4 text-left text-sm text-slate-600 mb-10 pl-2">
                             <div class="flex items-center"><i class="fa-solid fa-check text-blue-500 w-6"></i> <span>작업 기간: <b>2주</b></span></div>
                             <div class="flex items-center"><i class="fa-solid fa-check text-blue-500 w-6"></i> <span>컷 장수: <b>총 5컷 이내</b></span></div>
@@ -647,7 +656,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                         </div>
                         <h4 class="text-lg font-bold text-red-500 mb-1 mt-2">PREMIUM</h4>
                         <div id="price-premium" class="text-3xl font-black text-red-500 mb-2 font-mono">0원</div>
-                        <p class="text-xs text-red-400/80 mb-8 font-medium">표준형 패키지 <span class="text-red-400/80">(VAT 포함)</span></p>
+                        <p class="text-xs text-red-400/80 mb-8 font-medium">표준형 패키지</p>
                         <div class="space-y-4 text-left text-sm text-slate-700 mb-10 pl-2">
                             <div class="flex items-center"><i class="fa-solid fa-check text-red-500 w-6"></i> <span>작업 기간: <b>1주</b></span></div>
                             <div class="flex items-center"><i class="fa-solid fa-check text-red-500 w-6"></i> <span>컷 장수: <b>무제한</b></span></div>
@@ -664,7 +673,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                         </div>
                         <h4 class="text-lg font-bold text-yellow-600 mb-1 mt-2">EXPRESS</h4>
                         <div id="price-express" class="text-3xl font-black text-yellow-600 mb-2 font-mono">0원</div>
-                        <p class="text-xs text-yellow-600/80 mb-8 font-medium">긴급형 패키지 <span class="text-yellow-600/80">(VAT 포함)</span></p>
+                        <p class="text-xs text-yellow-600/80 mb-8 font-medium">긴급형 패키지</p>
                         <div class="space-y-4 text-left text-sm text-slate-600 mb-10 pl-2">
                             <div class="flex items-center"><i class="fa-solid fa-bolt text-yellow-500 w-6"></i> <span>작업 기간: <b>4일 이내</b></span></div>
                             <div class="flex items-center"><i class="fa-solid fa-check text-yellow-500 w-6"></i> <span>컷 장수: <b>무제한</b></span></div>
@@ -855,9 +864,9 @@ HTML_PAGE = r"""<!DOCTYPE html>
             return {
                 base: baseQuote, rate: rate, note: note,
                 plans: {
-                    basic: Math.floor((baseQuote * 0.8 * 1.1) / 10000) * 10000,
-                    premium: Math.floor((baseQuote * 1.1) / 10000) * 10000,
-                    express: Math.floor((baseQuote * 1.2 * 1.1) / 10000) * 10000
+                    basic: Math.floor((baseQuote * 0.8) / 10000) * 10000,
+                    premium: baseQuote,
+                    express: Math.floor((baseQuote * 1.2) / 10000) * 10000
                 }
             };
         }
