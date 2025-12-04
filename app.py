@@ -1,4 +1,5 @@
 import math
+import os
 import json
 import re
 import uuid
@@ -29,8 +30,8 @@ REAL_API_KEY = "7bab15bfb6883de78a3e2720338237530938fbeca5a7f4038ef1dfd0450dca48
 # API Key 생성 후 아래에 입력하세요
 SMTP_SERVER = "smtp.sendgrid.net"
 SMTP_PORT = 587
-SMTP_USER = "apikey"  # 이 값은 그대로 "apikey"로 유지
-SMTP_PASSWORD = "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"  # 🔴 SendGrid API Key로 교체 필요!
+SMTP_USER = "apikey"
+SMTP_PASSWORD = os.environ.get("SENDGRID_API_KEY", "")  # 환경변수에서 가져오기
 
 # ⚠️ 중요: SendGrid API Key 받는 방법
 # 1. https://sendgrid.com 가입 (무료)
