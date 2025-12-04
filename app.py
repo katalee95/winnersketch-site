@@ -623,13 +623,14 @@ HTML_PAGE = r"""<!DOCTYPE html>
                         <span>공고 설계비:</span>
                         <span id="modal-fee" class="font-bold text-slate-800 text-lg">0원</span>
                     </div>
+                    <p class="text-xs text-slate-400 mt-2">VAT 포함</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-4">
                     <div class="price-card border border-slate-100 rounded-2xl p-8 text-center relative bg-white hover:border-blue-200">
                         <h4 class="text-lg font-bold text-slate-900 mb-1">BASIC</h4>
                         <div id="price-basic" class="text-3xl font-black text-blue-600 mb-2 font-mono">0원</div>
-                        <p class="text-xs text-slate-400 mb-8 font-medium">실속형 패키지</p>
+                        <p class="text-xs text-slate-400 mb-8 font-medium">실속형 패키지 <span class="text-slate-400">(VAT 포함)</span></p>
                         <div class="space-y-4 text-left text-sm text-slate-600 mb-10 pl-2">
                             <div class="flex items-center"><i class="fa-solid fa-check text-blue-500 w-6"></i> <span>작업 기간: <b>2주</b></span></div>
                             <div class="flex items-center"><i class="fa-solid fa-check text-blue-500 w-6"></i> <span>컷 장수: <b>총 5컷 이내</b></span></div>
@@ -646,7 +647,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                         </div>
                         <h4 class="text-lg font-bold text-red-500 mb-1 mt-2">PREMIUM</h4>
                         <div id="price-premium" class="text-3xl font-black text-red-500 mb-2 font-mono">0원</div>
-                        <p class="text-xs text-red-400/80 mb-8 font-medium">표준형 패키지</p>
+                        <p class="text-xs text-red-400/80 mb-8 font-medium">표준형 패키지 <span class="text-red-400/80">(VAT 포함)</span></p>
                         <div class="space-y-4 text-left text-sm text-slate-700 mb-10 pl-2">
                             <div class="flex items-center"><i class="fa-solid fa-check text-red-500 w-6"></i> <span>작업 기간: <b>1주</b></span></div>
                             <div class="flex items-center"><i class="fa-solid fa-check text-red-500 w-6"></i> <span>컷 장수: <b>무제한</b></span></div>
@@ -663,7 +664,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                         </div>
                         <h4 class="text-lg font-bold text-yellow-600 mb-1 mt-2">EXPRESS</h4>
                         <div id="price-express" class="text-3xl font-black text-yellow-600 mb-2 font-mono">0원</div>
-                        <p class="text-xs text-yellow-600/80 mb-8 font-medium">긴급형 패키지</p>
+                        <p class="text-xs text-yellow-600/80 mb-8 font-medium">긴급형 패키지 <span class="text-yellow-600/80">(VAT 포함)</span></p>
                         <div class="space-y-4 text-left text-sm text-slate-600 mb-10 pl-2">
                             <div class="flex items-center"><i class="fa-solid fa-bolt text-yellow-500 w-6"></i> <span>작업 기간: <b>4일 이내</b></span></div>
                             <div class="flex items-center"><i class="fa-solid fa-check text-yellow-500 w-6"></i> <span>컷 장수: <b>무제한</b></span></div>
@@ -854,9 +855,9 @@ HTML_PAGE = r"""<!DOCTYPE html>
             return {
                 base: baseQuote, rate: rate, note: note,
                 plans: {
-                    basic: Math.floor((baseQuote * 0.8) / 10000) * 10000,
-                    premium: baseQuote,
-                    express: Math.floor((baseQuote * 1.2) / 10000) * 10000
+                    basic: Math.floor((baseQuote * 0.8 * 1.1) / 10000) * 10000,
+                    premium: Math.floor((baseQuote * 1.1) / 10000) * 10000,
+                    express: Math.floor((baseQuote * 1.2 * 1.1) / 10000) * 10000
                 }
             };
         }
