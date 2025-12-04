@@ -513,104 +513,54 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <p class="text-lg text-slate-600">위너스케치의 실제 작업 사례들을 소개합니다</p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 gap-8">
                     <!-- Portfolio Item 1 -->
-                    <div class="group bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition">
-                        <div class="h-48 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                            <i class="fa-solid fa-image text-white text-6xl opacity-20"></i>
-                        </div>
-                        <div class="p-6">
-                            <h3 class="text-xl font-black text-slate-900 mb-2">현상설계 프로젝트 1</h3>
-                            <p class="text-sm text-slate-600 mb-4">건축 현상설계 스케치업 모델링 작업</p>
-                            <div class="flex items-center gap-2 text-xs text-slate-500">
-                                <i class="fa-solid fa-calendar"></i>
-                                <span>2024년</span>
-                            </div>
-                        </div>
+                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
+                        <img src="/static/images/portfolio/1.jpg" alt="포트폴리오 1" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
                     </div>
 
                     <!-- Portfolio Item 2 -->
-                    <div class="group bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition">
-                        <div class="h-48 bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
-                            <i class="fa-solid fa-image text-white text-6xl opacity-20"></i>
-                        </div>
-                        <div class="p-6">
-                            <h3 class="text-xl font-black text-slate-900 mb-2">현상설계 프로젝트 2</h3>
-                            <p class="text-sm text-slate-600 mb-4">3D 렌더링 및 프레젠테이션 작업</p>
-                            <div class="flex items-center gap-2 text-xs text-slate-500">
-                                <i class="fa-solid fa-calendar"></i>
-                                <span>2024년</span>
-                            </div>
-                        </div>
+                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
+                        <img src="/static/images/portfolio/2.jpg" alt="포트폴리오 2" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
                     </div>
 
                     <!-- Portfolio Item 3 -->
-                    <div class="group bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition">
-                        <div class="h-48 bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
-                            <i class="fa-solid fa-image text-white text-6xl opacity-20"></i>
-                        </div>
-                        <div class="p-6">
-                            <h3 class="text-xl font-black text-slate-900 mb-2">현상설계 프로젝트 3</h3>
-                            <p class="text-sm text-slate-600 mb-4">도시설계 및 마스터플랜 작업</p>
-                            <div class="flex items-center gap-2 text-xs text-slate-500">
-                                <i class="fa-solid fa-calendar"></i>
-                                <span>2024년</span>
-                            </div>
-                        </div>
+                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
+                        <img src="/static/images/portfolio/3.jpg" alt="포트폴리오 3" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
                     </div>
 
                     <!-- Portfolio Item 4 -->
-                    <div class="group bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition">
-                        <div class="h-48 bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
-                            <i class="fa-solid fa-image text-white text-6xl opacity-20"></i>
-                        </div>
-                        <div class="p-6">
-                            <h3 class="text-xl font-black text-slate-900 mb-2">현상설계 프로젝트 4</h3>
-                            <p class="text-sm text-slate-600 mb-4">상세 설계 및 시각화 작업</p>
-                            <div class="flex items-center gap-2 text-xs text-slate-500">
-                                <i class="fa-solid fa-calendar"></i>
-                                <span>2024년</span>
-                            </div>
-                        </div>
+                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
+                        <img src="/static/images/portfolio/4.jpg" alt="포트폴리오 4" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
                     </div>
 
                     <!-- Portfolio Item 5 -->
-                    <div class="group bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition">
-                        <div class="h-48 bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center">
-                            <i class="fa-solid fa-image text-white text-6xl opacity-20"></i>
-                        </div>
-                        <div class="p-6">
-                            <h3 class="text-xl font-black text-slate-900 mb-2">현상설계 프로젝트 5</h3>
-                            <p class="text-sm text-slate-600 mb-4">인테리어 설계 및 공간 계획</p>
-                            <div class="flex items-center gap-2 text-xs text-slate-500">
-                                <i class="fa-solid fa-calendar"></i>
-                                <span>2024년</span>
-                            </div>
-                        </div>
+                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
+                        <img src="/static/images/portfolio/5.jpg" alt="포트폴리오 5" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
                     </div>
 
                     <!-- Portfolio Item 6 -->
-                    <div class="group bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition">
-                        <div class="h-48 bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center">
-                            <i class="fa-solid fa-image text-white text-6xl opacity-20"></i>
-                        </div>
-                        <div class="p-6">
-                            <h3 class="text-xl font-black text-slate-900 mb-2">현상설계 프로젝트 6</h3>
-                            <p class="text-sm text-slate-600 mb-4">경관설계 및 조경 시각화</p>
-                            <div class="flex items-center gap-2 text-xs text-slate-500">
-                                <i class="fa-solid fa-calendar"></i>
-                                <span>2024년</span>
-                            </div>
-                        </div>
+                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
+                        <img src="/static/images/portfolio/6.jpg" alt="포트폴리오 6" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
+                    </div>
+                    
+                    <!-- Portfolio Item 7 -->
+                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
+                        <img src="/static/images/portfolio/7.jpg" alt="포트폴리오 7" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
+                    </div>
+                    
+                    <!-- Portfolio Item 8 -->
+                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
+                        <img src="/static/images/portfolio/8.jpg" alt="포트폴리오 8" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
+                    </div>
+                    
+                    <!-- Portfolio Item 9 -->
+                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
+                        <img src="/static/images/portfolio/9.jpg" alt="포트폴리오 9" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
                     </div>
                 </div>
 
-                <div class="mt-16 text-center">
-                    <p class="text-slate-600 mb-6">더 많은 포트폴리오를 보고 싶으신가요?</p>
-                    <button onclick="openContactModal()" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded-full shadow-lg transition">
-                        <i class="fa-solid fa-envelope mr-2"></i>문의하기
-                    </button>
-                </div>
+                
             </div>
         </section>
     </div>
