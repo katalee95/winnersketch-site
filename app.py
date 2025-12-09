@@ -402,7 +402,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div class="text-center">
                         <h3 class="text-xl font-black text-slate-900 mb-4">효율적인 작업을<br>위한 최적의 파트너</h3>
                         <p class="text-slate-500 leading-relaxed text-sm break-keep">
-                            1인 프리랜서의 기동성과 전문 업체의 시스템을 결합하여, 소장님의 소중한 시간을 아껴드립니다.
+                            8년차 CG 전문 업체의 기동성과 시스템을 결합하여, 소장님의 소중한 시간을 아껴드립니다.
                         </p>
                     </div>
                 </div>
