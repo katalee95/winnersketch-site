@@ -345,6 +345,14 @@ HTML_PAGE = r"""<!DOCTYPE html>
         .price-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .price-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
         .feature-card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        /* 가로 스크롤바 숨기기 */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -453,7 +461,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
             <div class="w-full">
                 <div id="content-search" class="block">
                     <div class="relative mb-10 max-w-2xl mx-auto">
-                        <input type="text" id="searchInput" placeholder="공모전 명칭 입력 (예: 해미면, 태화강, 도서관)" 
+                        <input type="text" id="searchInput" placeholder="공모전 명칭 입력 (예: 실시설계, 리모델링, 도서관)" 
                             class="w-full bg-slate-100 border-none rounded-full py-4 pl-6 pr-16 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition placeholder-slate-400">
                         <button onclick="performSearch()" class="absolute right-2 top-2 bottom-2 bg-blue-500 text-white w-12 h-12 rounded-full hover:bg-blue-600 transition flex items-center justify-center">
                             <i class="fa-solid fa-arrow-right"></i>
@@ -512,70 +520,249 @@ HTML_PAGE = r"""<!DOCTYPE html>
             <h3 class="text-2xl md:text-3xl font-black text-slate-900 mb-6">위너스케치에서 쉽고 합리적으로.</h3>
             <p class="mb-10 text-slate-500">건축 현상설계 당선을 위한 최적의 파트너</p>
             <div class="text-xs text-slate-400 border-t border-slate-100 pt-10">
-                <p class="mb-2">오에스케이스튜디오 | 대표: 이주훈,황미석 | 사업자등록번호: 208-12-72095</p>
+                <p class="mb-2">오에스케이스튜디오 | 대표: 이주훈 | 사업자등록번호: 208-12-72095</p>
                 <p>문의: winnersketch.kr@gmail.com | Copyright © WinnerSketch. All rights reserved.</p>
             </div>
         </div>
     </footer>
     </div>
 
-    <div id="portfolio-section" class="hidden">
+<div id="portfolio-section" class="hidden">
         <section class="pt-20 pb-20 px-4 bg-white">
-            <div class="max-w-6xl mx-auto">
-                <div class="text-center mb-16">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center mb-20">
                     <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-4">포트폴리오</h1>
-                    <p class="text-lg text-slate-600">위너스케치의 실제 작업 사례들을 소개합니다</p>
+                    <p class="text-lg text-slate-600">위너스케치의 주요 프로젝트를 소개합니다</p>
                 </div>
 
-                <div class="grid grid-cols-1 gap-8">
-                    <!-- Portfolio Item 1 -->
-                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
-                        <img src="/static/images/portfolio/1.jpg" alt="포트폴리오 1" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
+                <div class="mb-32">
+                    <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
+                        <div>
+                            <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 01</span>
+                            <h2 class="text-3xl font-black text-slate-900 mt-1">홍릉 첨단의료기기개발센터 및 바이오헬스센터 복합 건립 설계공모</h2>
+                        </div>
+                        <p class="text-slate-500 text-sm mt-2 md:mt-0">2024 / Seoul / Competition</p>
                     </div>
 
-                    <!-- Portfolio Item 2 -->
-                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
-                        <img src="/static/images/portfolio/2.jpg" alt="포트폴리오 2" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
-                    </div>
+                    <div class="relative group">
+                        <div id="slider-1" class="flex overflow-x-auto gap-4 snap-x snap-mandatory scrollbar-hide scroll-smooth pb-4">
+                            
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/A-1.jpg" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
 
-                    <!-- Portfolio Item 3 -->
-                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
-                        <img src="/static/images/portfolio/3.jpg" alt="포트폴리오 3" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
-                    </div>
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/A-2.jpg" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
 
-                    <!-- Portfolio Item 4 -->
-                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
-                        <img src="/static/images/portfolio/4.jpg" alt="포트폴리오 4" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
-                    </div>
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/A-3.jpg" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
 
-                    <!-- Portfolio Item 5 -->
-                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
-                        <img src="/static/images/portfolio/5.jpg" alt="포트폴리오 5" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
-                    </div>
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/A-4.jpg" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
 
-                    <!-- Portfolio Item 6 -->
-                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
-                        <img src="/static/images/portfolio/6.jpg" alt="포트폴리오 6" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
-                    </div>
-                    
-                    <!-- Portfolio Item 7 -->
-                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
-                        <img src="/static/images/portfolio/7.jpg" alt="포트폴리오 7" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
-                    </div>
-                    
-                    <!-- Portfolio Item 8 -->
-                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
-                        <img src="/static/images/portfolio/8.jpg" alt="포트폴리오 8" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
-                    </div>
-                    
-                    <!-- Portfolio Item 9 -->
-                    <div class="group bg-white/90 border border-slate-100 shadow-xl hover:shadow-2xl transition overflow-hidden">
-                        <img src="/static/images/portfolio/9.jpg" alt="포트폴리오 9" class="w-full h-auto object-cover transition-all duration-300 group-hover:scale-105" loading="lazy">
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/A-5.jpg" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/A-6.jpg" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/A-7.jpg" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/A-8.jpg" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/A-9.jpg" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/A-10.jpg" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/A-11.jpg" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+                        </div>
+
+                        <button onclick="scrollSlider('slider-1', 'left')" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-slate-900 w-12 h-12 rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 hidden md:flex z-10">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button onclick="scrollSlider('slider-1', 'right')" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-slate-900 w-12 h-12 rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 hidden md:flex z-10">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
                     </div>
                 </div>
 
-                
-            </div>
+                <div class="mb-32">
+                    <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
+                        <div>
+                            <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 02</span>
+                            <h2 class="text-3xl font-black text-slate-900 mt-1">양주 종합사회복지센터 건립 건축 설계공모</h2>
+                        </div>
+                        <p class="text-slate-500 text-sm mt-2 md:mt-0">2022 / Yangju / Competition</p>
+                    </div>
+
+                    <div class="relative group">
+                        <div id="slider-2" class="flex overflow-x-auto gap-4 snap-x snap-mandatory scrollbar-hide scroll-smooth pb-4">
+                            
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/B-1.jpg" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/B-2.png" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/B-3.jpg" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+
+                             <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/B-4.png" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+
+                             <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/B-5.png" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+
+                             <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/B-6.png" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+                        </div>
+
+                        <button onclick="scrollSlider('slider-2', 'left')" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-slate-900 w-12 h-12 rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 hidden md:flex z-10">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button onclick="scrollSlider('slider-2', 'right')" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-slate-900 w-12 h-12 rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 hidden md:flex z-10">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                                <div class="mb-32">
+                    <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
+                        <div>
+                            <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 03</span>
+                            <h2 class="text-3xl font-black text-slate-900 mt-1">연수구 보훈회관 건립 설계공모</h2>
+                        </div>
+                        <p class="text-slate-500 text-sm mt-2 md:mt-0">2023 / Incheon / Visualization</p>
+                    </div>
+
+                    <div class="relative group">
+                        <div id="slider-3" class="flex overflow-x-auto gap-4 snap-x snap-mandatory scrollbar-hide scroll-smooth pb-4">
+                            
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/C-1.jpg" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/C-2.png" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/C-3.png" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/C-4.png" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+                        </div>
+
+                        <button onclick="scrollSlider('slider-3', 'left')" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-slate-900 w-12 h-12 rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 hidden md:flex z-10">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button onclick="scrollSlider('slider-3', 'right')" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-slate-900 w-12 h-12 rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 hidden md:flex z-10">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                                <div class="mb-32">
+                    <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
+                        <div>
+                            <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 04</span>
+                            <h2 class="text-3xl font-black text-slate-900 mt-1">장평 복지회관 실시설계</h2>
+                        </div>
+                        <p class="text-slate-500 text-sm mt-2 md:mt-0">2024 / Jangheung / Visualization</p>
+                    </div>
+
+                    <div class="relative w-full px-[5%] md:px-0">
+                        <div class="rounded-xl overflow-hidden shadow-2xl border border-slate-100">
+                            <img src="/static/images/portfolio/D-1.jpg" onclick="openLightbox(this.src)" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" loading="lazy">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-32">
+                    <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
+                        <div>
+                            <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 05</span>
+                            <h2 class="text-3xl font-black text-slate-900 mt-1">영암군 농업기계 안전교육 보관시설 건립사업 건축설계 공모</h2>
+                        </div>
+                        <p class="text-slate-500 text-sm mt-2 md:mt-0">2024 / Gwangmyeong / Competition</p>
+                    </div>
+
+                    <div class="relative group">
+                        <div id="slider-5" class="flex overflow-x-auto gap-4 snap-x snap-mandatory scrollbar-hide scroll-smooth pb-4">
+                            
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/E-1.jpg" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/E-2.png" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+                        </div>
+
+                        <button onclick="scrollSlider('slider-5', 'left')" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-slate-900 w-12 h-12 rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 hidden md:flex z-10">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button onclick="scrollSlider('slider-5', 'right')" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-slate-900 w-12 h-12 rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 hidden md:flex z-10">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-32">
+                    <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
+                        <div>
+                            <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 06</span>
+                            <h2 class="text-3xl font-black text-slate-900 mt-1">광명시민건강 체육센터 건립공사 기본 및 실시설계용역</h2>
+                        </div>
+                        <p class="text-slate-500 text-sm mt-2 md:mt-0">2024 / Gwangmyeong / Competition</p>
+                    </div>
+
+                    <div class="relative group">
+                        <div id="slider-6" class="flex overflow-x-auto gap-4 snap-x snap-mandatory scrollbar-hide scroll-smooth pb-4">
+                            
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/Z-1.jpg" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+
+                            <div class="min-w-[90%] md:min-w-[60%] snap-center relative rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                                <img src="/static/images/portfolio/Z-2.png" class="w-full h-[400px] md:h-[600px] object-cover cursor-pointer hover:opacity-95 transition" onclick="openLightbox(this.src)" loading="lazy">
+                            </div>
+                        </div>
+
+                        <button onclick="scrollSlider('slider-6', 'left')" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-slate-900 w-12 h-12 rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 hidden md:flex z-10">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button onclick="scrollSlider('slider-6', 'right')" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-slate-900 w-12 h-12 rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 hidden md:flex z-10">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+
+                </div>
         </section>
     </div>
 
@@ -1125,7 +1312,47 @@ HTML_PAGE = r"""<!DOCTYPE html>
                 btn.disabled = false;
             }
         }
+        function scrollSlider(elementId, direction) {
+            const container = document.getElementById(elementId);
+            const scrollAmount = container.clientWidth * 0.6; // 화면 너비의 60%만큼 이동
+            
+            if (direction === 'left') {
+                container.scrollLeft -= scrollAmount;
+            } else {
+                container.scrollLeft += scrollAmount;
+            }
+        }
+        // 라이트박스 열기
+        function openLightbox(imageSrc) {
+            const modal = document.getElementById('lightbox-modal');
+            const img = document.getElementById('lightbox-img');
+            
+            img.src = imageSrc;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // 배경 스크롤 막기
+        }
+
+        // 라이트박스 닫기
+        function closeLightbox() {
+            const modal = document.getElementById('lightbox-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = ''; // 스크롤 다시 허용
+            setTimeout(() => { document.getElementById('lightbox-img').src = ''; }, 200);
+        }
+        
+        // ESC 키 누르면 닫기
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") {
+                closeLightbox();
+            }
+        });
     </script>
+    <div id="lightbox-modal" class="fixed inset-0 z-[200] bg-black/95 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300" onclick="closeLightbox()">
+        <button class="absolute top-6 right-6 text-white/50 hover:text-white text-5xl transition transform hover:scale-110" onclick="closeLightbox()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <img id="lightbox-img" src="" class="max-w-full max-h-[90vh] object-contain rounded-md shadow-2xl cursor-default" onclick="event.stopPropagation()">
+    </div>
 </body>
 </html>
 """
