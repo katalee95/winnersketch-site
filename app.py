@@ -575,7 +575,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
                         <div>
                             <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 01</span>
-                            <h2 class="text-3xl font-black text-slate-900 mt-1">홍릉 첨단의료기기개발센터 및 바이오헬스센터 복합 건립 설계공모</h2>
+                            <h2 class="text-xl md:text-3xl font-black text-slate-900 mt-1">홍릉 첨단의료기기개발센터 및 바이오헬스센터 복합 건립 설계공모</h2>
                         </div>
                         <p class="text-slate-500 text-sm mt-2 md:mt-0">2024 / Seoul / Competition</p>
                     </div>
@@ -641,7 +641,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
                         <div>
                             <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 02</span>
-                            <h2 class="text-3xl font-black text-slate-900 mt-1">양주 종합사회복지센터 건립 건축 설계공모</h2>
+                            <h2 class="text-xl md:text-3xl font-black text-slate-900 mt-1">양주 종합사회복지센터 건립 건축 설계공모</h2>
                         </div>
                         <p class="text-slate-500 text-sm mt-2 md:mt-0">2022 / Yangju / Competition</p>
                     </div>
@@ -687,7 +687,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
                         <div>
                             <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 03</span>
-                            <h2 class="text-3xl font-black text-slate-900 mt-1">연수구 보훈회관 건립 설계공모</h2>
+                            <h2 class="text-xl md:text-3xl font-black text-slate-900 mt-1">연수구 보훈회관 건립 설계공모</h2>
                         </div>
                         <p class="text-slate-500 text-sm mt-2 md:mt-0">2023 / Incheon / Competition</p>
                     </div>
@@ -725,7 +725,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
                         <div>
                             <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 04</span>
-                            <h2 class="text-3xl font-black text-slate-900 mt-1">장평 복지회관 실시설계</h2>
+                            <h2 class="text-xl md:text-3xl font-black text-slate-900 mt-1">>장평 복지회관 실시설계</h2>
                         </div>
                         <p class="text-slate-500 text-sm mt-2 md:mt-0">2024 / Jangheung / Visualization</p>
                     </div>
@@ -741,7 +741,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
                         <div>
                             <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 05</span>
-                            <h2 class="text-3xl font-black text-slate-900 mt-1">영암군 농업기계 안전교육 보관시설 건립사업 건축설계 공모</h2>
+                            <h2 class="text-xl md:text-3xl font-black text-slate-900 mt-1">영암군 농업기계 안전교육 보관시설 건립사업 건축설계 공모</h2>
                         </div>
                         <p class="text-slate-500 text-sm mt-2 md:mt-0">2024 / Yeong-am / Competition</p>
                     </div>
@@ -771,7 +771,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
                         <div>
                             <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 06</span>
-                            <h2 class="text-3xl font-black text-slate-900 mt-1">충북생명산업고 교사 증축공사 설계공모</h2>
+                            <h2 class="text-xl md:text-3xl font-black text-slate-900 mt-1">충북생명산업고 교사 증축공사 설계공모</h2>
                         </div>
                         <p class="text-slate-500 text-sm mt-2 md:mt-0">2023 / Boeun / Competition</p>
                     </div>
@@ -813,7 +813,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
                         <div>
                             <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 07</span>
-                            <h2 class="text-3xl font-black text-slate-900 mt-1">청주중앙여중 본관 및 후관 공간재구조화 설계공모</h2>
+                            <h2 class="text-xl md:text-3xl font-black text-slate-900 mt-1">청주중앙여중 본관 및 후관 공간재구조화 설계공모</h2>
                         </div>
                         <p class="text-slate-500 text-sm mt-2 md:mt-0">2025 / Cheongju / Competition</p>
                     </div>
@@ -875,7 +875,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
                         <div>
                             <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 08</span>
-                            <h2 class="text-3xl font-black text-slate-900 mt-1">충주남산초 공간재구조화 리모델링 및 증축공사 설계공모</h2>
+                            <h2 class="text-xl md:text-3xl font-black text-slate-900 mt-1">충주남산초 공간재구조화 리모델링 및 증축공사 설계공모</h2>
                         </div>
                         <p class="text-slate-500 text-sm mt-2 md:mt-0">2025 / Chungju / Competition</p>
                     </div>
@@ -913,7 +913,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
                         <div>
                             <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 09</span>
-                            <h2 class="text-3xl font-black text-slate-900 mt-1">대소 공영주차장 조성사업 설계공모</h2>
+                            <h2 class="text-xl md:text-3xl font-black text-slate-900 mt-1">대소 공영주차장 조성사업 설계공모</h2>
                         </div>
                         <p class="text-slate-500 text-sm mt-2 md:mt-0">2024 / Eumseong / Competition</p>
                     </div>
@@ -943,7 +943,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
                         <div>
                             <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 10</span>
-                            <h2 class="text-3xl font-black text-slate-900 mt-1">광명시민건강 체육센터 건립공사 기본 및 실시설계용역</h2>
+                            <h2 class="text-xl md:text-3xl font-black text-slate-900 mt-1">광명시민건강 체육센터 건립공사 기본 및 실시설계용역</h2>
                         </div>
                         <p class="text-slate-500 text-sm mt-2 md:mt-0">2024 / Gwangmyeong / Competition</p>
                     </div>
@@ -959,7 +959,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
                         <div>
                             <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 11</span>
-                            <h2 class="text-3xl font-black text-slate-900 mt-1">중랑구 천문과학관 건립 설계공모</h2>
+                            <h2 class="text-xl md:text-3xl font-black text-slate-900 mt-1">중랑구 천문과학관 건립 설계공모</h2>
                         </div>
                         <p class="text-slate-500 text-sm mt-2 md:mt-0">2024 / Seoul / Competition</p>
                     </div>
@@ -989,7 +989,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
                         <div>
                             <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 12</span>
-                            <h2 class="text-3xl font-black text-slate-900 mt-1">청산초중 그린스마트 미래학교 층축공사 설계공모</h2>
+                            <h2 class="text-xl md:text-3xl font-black text-slate-900 mt-1">청산초중 그린스마트 미래학교 층축공사 설계공모</h2>
                         </div>
                         <p class="text-slate-500 text-sm mt-2 md:mt-0">2023 / Okcheon / Competition</p>
                     </div>
@@ -1005,7 +1005,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
                         <div>
                             <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 13</span>
-                            <h2 class="text-3xl font-black text-slate-900 mt-1">진주시 신안동 복합 스포츠타운 설계공모</h2>
+                            <h2 class="text-xl md:text-3xl font-black text-slate-900 mt-1">진주시 신안동 복합 스포츠타운 설계공모</h2>
                         </div>
                         <p class="text-slate-500 text-sm mt-2 md:mt-0">2022 / Jinju / Competition</p>
                     </div>
@@ -1039,7 +1039,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
                         <div>
                             <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 14</span>
-                            <h2 class="text-3xl font-black text-slate-900 mt-1">청주 다회용기 공공세척장 설계공모</h2>
+                            <h2 class="text-xl md:text-3xl font-black text-slate-900 mt-1">청주 다회용기 공공세척장 설계공모</h2>
                         </div>
                         <p class="text-slate-500 text-sm mt-2 md:mt-0">2022 / Cheongju / Competition</p>
                     </div>
