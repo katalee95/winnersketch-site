@@ -44,10 +44,45 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS subscribers
                  (email TEXT PRIMARY KEY, min_fee INTEGER, max_fee INTEGER, 
                   token TEXT, marketing_agreed INTEGER, created_at TEXT)''')
+    # 2. [신규] 수동 공고 데이터 테이블 (새로 추가됨)
+    c.execute('''CREATE TABLE IF NOT EXISTS manual_items
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  title TEXT, agency TEXT, fee INTEGER, 
+                  notice_date TEXT, url TEXT, created_at TEXT)''')
     conn.commit()
     conn.close()
 
 init_db()
+
+def get_manual_data_from_db(keyword=None, min_fee=0, max_fee=999999999999):
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    
+    query = "SELECT * FROM manual_items WHERE fee BETWEEN ? AND ?"
+    params = [min_fee, max_fee]
+    
+    if keyword:
+        query += " AND (title LIKE ? OR agency LIKE ?)"
+        params.append(f"%{keyword}%")
+        params.append(f"%{keyword}%")
+        
+    query += " ORDER BY notice_date DESC"
+    
+    rows = c.execute(query, params).fetchall()
+    conn.close()
+    
+    results = []
+    for row in rows:
+        results.append({
+            "title": row['title'],
+            "agency": row['agency'],
+            "fee": row['fee'],
+            "notice_date": row['notice_date'],
+            "url": row['url'],
+            "raw_date": row['notice_date'].replace("-", "") # 날짜 포맷 맞춤
+        })
+    return results
 
 
 # ==============================
@@ -330,6 +365,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>위너스케치 - 건축 현상설계 파트너</title>
+    <link rel="icon" href="/static/images/favicon.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
@@ -410,7 +446,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div class="text-center">
                         <h3 class="text-xl font-black text-slate-900 mb-4">효율적인 작업을<br>위한 최적의 파트너</h3>
                         <p class="text-slate-500 leading-relaxed text-sm break-keep">
-                            8년차 CG 전문 업체의 전문성과 노하우를 바탕으로, 최적을 결과물을 제공합니다.
+                            8년차 CG 전문 업체의 전문성과 노하우를 바탕으로, 최적의 결과물을 제공합니다.
                         </p>
                     </div>
                 </div>
@@ -470,7 +506,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div id="search-results" class="space-y-4 max-w-4xl mx-auto">
                         <div class="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
                             <p class="text-slate-400 font-medium">검색어를 입력하여 관련 용역을 찾아보세요.</p>
-                            <p class="text-slate-400 text-sm mt-2">('설계' 키워드가 포함된 공고만 검색됩니다)</p>
+                            <p class="text-slate-400 text-sm mt-2">(검색 결과가 없는 공고는 문의주시면 친절히 안내해드리겠습니다.)</p>
                         </div>
                     </div>
                 </div>
@@ -1611,6 +1647,73 @@ HTML_PAGE = r"""<!DOCTYPE html>
 </html>
 """
 
+# ==============================
+# [신규] 관리자 페이지 (수동 등록)
+# ==============================
+
+@app.route("/admin")
+def admin_page():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>관리자 - 공고 수동 등록</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-100 p-10">
+        <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow">
+            <h1 class="text-2xl font-bold mb-6">📝 공고 수동 등록</h1>
+            <form action="/api/add_manual" method="POST" class="space-y-4">
+                <div>
+                    <label class="block font-bold mb-1">공고명 (Title)</label>
+                    <input type="text" name="title" required class="w-full border p-2 rounded">
+                </div>
+                <div>
+                    <label class="block font-bold mb-1">발주처 (Agency)</label>
+                    <input type="text" name="agency" required class="w-full border p-2 rounded">
+                </div>
+                <div>
+                    <label class="block font-bold mb-1">설계비 (원)</label>
+                    <input type="number" name="fee" required class="w-full border p-2 rounded">
+                </div>
+                <div>
+                    <label class="block font-bold mb-1">공고일 (YYYY-MM-DD)</label>
+                    <input type="date" name="notice_date" required class="w-full border p-2 rounded">
+                </div>
+                <div>
+                    <label class="block font-bold mb-1">링크 (URL)</label>
+                    <input type="text" name="url" placeholder="https://..." class="w-full border p-2 rounded">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700">등록하기</button>
+            </form>
+            <div class="mt-4 text-sm text-gray-500">
+                * 등록된 데이터는 검색 결과 최상단에 노출됩니다.
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+@app.post("/api/add_manual")
+def api_add_manual():
+    title = request.form.get("title")
+    agency = request.form.get("agency")
+    fee = request.form.get("fee")
+    notice_date = request.form.get("notice_date")
+    url = request.form.get("url") or "#"
+    created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("INSERT INTO manual_items (title, agency, fee, notice_date, url, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+              (title, agency, fee, notice_date, url, created_at))
+    conn.commit()
+    conn.close()
+    
+    return "<script>alert('등록되었습니다!'); window.location.href='/admin';</script>"
+
 @app.route("/")
 def index():
     return Response(HTML_PAGE, mimetype="text/html")
@@ -1619,9 +1722,17 @@ def index():
 @app.get("/api/search")
 def api_search():
     q = request.args.get("q", "").strip()
-    if not q: return jsonify({"items": []})
-    items, _ = get_competition_data(q, rows=100, strict_mode=False)
-    return jsonify({"items": items})
+    
+    # 1. API 데이터 가져오기
+    api_items, _ = get_competition_data(q, rows=100, strict_mode=False) if q else ([], [])
+    
+    # 2. 수동 데이터 가져오기 (검색어 포함)
+    manual_items = get_manual_data_from_db(keyword=q)
+    
+    # 3. 합치기 (수동 데이터를 위로)
+    final_items = manual_items + api_items
+    
+    return jsonify({"items": final_items})
 
 
 @app.get("/api/recommend")
@@ -1631,19 +1742,20 @@ def api_recommend():
     try: max_fee = int(request.args.get("max", "999999999999") or 999999999999)
     except: max_fee = 999999999999
 
-    # 🚀 최적화: 병렬 처리로 API 호출 속도 개선
+    # 1. 수동 데이터 먼저 조회
+    manual_items = get_manual_data_from_db(min_fee=min_fee, max_fee=max_fee)
+
+    # 2. API 데이터 조회 (기존 로직 유지)
     from concurrent.futures import ThreadPoolExecutor, as_completed
     
     keywords = ["건축설계", "설계공모", "실시설계", "리모델링"]
-    merged = []
+    api_results = []
     seen = set()
 
-    # 병렬로 모든 키워드 검색 (기존: 순차 -> 최적화: 동시 실행)
     with ThreadPoolExecutor(max_workers=4) as executor:
         future_to_kw = {executor.submit(get_competition_data, kw, 100, True, 30): kw for kw in keywords}
         
         for future in as_completed(future_to_kw):
-            kw = future_to_kw[future]
             try:
                 res, _ = future.result()
                 for item in res:
@@ -1651,12 +1763,16 @@ def api_recommend():
                     if uid in seen: continue
                     seen.add(uid)
                     if not (min_fee <= item["fee"] <= max_fee): continue
-                    merged.append(item)
-            except Exception as e:
-                print(f"[ERROR] {kw} 검색 실패: {e}")
+                    api_results.append(item)
+            except Exception:
+                pass
 
-    merged.sort(key=lambda x: x["notice_date"], reverse=True)
-    return jsonify({"items": merged})
+    api_results.sort(key=lambda x: x["notice_date"], reverse=True)
+    
+    # 3. 합치기 (수동 데이터 + API 데이터)
+    final_items = manual_items + api_results
+    
+    return jsonify({"items": final_items})
 
 
 @app.post("/api/subscribe")
