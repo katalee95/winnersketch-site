@@ -468,7 +468,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                         <i class="fa-regular fa-lightbulb"></i>
                     </div>
                     <div class="text-center">
-                        <h3 class="text-xl font-black text-slate-900 mb-4">설계를 완성시키는<br>전략</h3>
+                        <h3 class="text-xl font-black text-slate-900 mb-4">설계를 완성시키는<br>감각적 전략</h3>
                         <p class="text-slate-500 leading-relaxed text-sm break-keep">
                             우리는 건축을 전공한 그래픽 디자이너입니다. 건축적 의도를 가장 잘 살린 '이기는 뷰'를 만듭니다.
                         </p>
