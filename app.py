@@ -725,7 +725,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 px-2">
                         <div>
                             <span class="text-blue-600 font-bold text-sm tracking-widest">PROJECT 04</span>
-                            <h2 class="text-xl md:text-3xl font-black text-slate-900 mt-1">>장평 복지회관 실시설계</h2>
+                            <h2 class="text-xl md:text-3xl font-black text-slate-900 mt-1">장평 복지회관 실시설계</h2>
                         </div>
                         <p class="text-slate-500 text-sm mt-2 md:mt-0">2024 / Jangheung / Visualization</p>
                     </div>
