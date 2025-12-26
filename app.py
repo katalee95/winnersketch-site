@@ -26,7 +26,7 @@ REAL_API_KEY = "7bab15bfb6883de78a3e2720338237530938fbeca5a7f4038ef1dfd0450dca48
 # Render 무료 플랜에서는 SMTP 포트(587)가 차단되므로 SendGrid HTTP API 사용
 
 # 💾 데이터베이스 파일명
-DB_FILE = "subscribers.db"
+DB_FILE = "/srv/winnersketch/data/subscribers.db"
 
 
 # 🚀 캐시 시스템 (메모리 기반) - API 호출 최적화
@@ -89,59 +89,41 @@ def get_manual_data_from_db(keyword=None, min_fee=0, max_fee=999999999999):
 # 2. 유틸리티 함수 (메일, API)
 # ==============================
 
+import os, smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.header import Header
+from email.utils import formataddr
+
 def send_email(to_email, subject, html_content):
-    """SendGrid API를 통한 메일 발송 (SMTP 포트 차단 문제 해결)"""
     try:
-        api_key = os.environ.get("SENDGRID_API_KEY", "")
-        
-        # 디버깅
-        api_key_length = len(api_key) if api_key else 0
-        print(f"[DEBUG] SendGrid API Key length: {api_key_length}")
-        
-        if not api_key or api_key_length < 10:
-            print(f"[ERROR] SendGrid API Key가 설정되지 않았습니다!")
+        smtp_server = "smtp.gmail.com"
+        smtp_port = 587
+        sender_email = "winnersketch.kr@gmail.com"
+        sender_password = os.environ.get("GMAIL_APP_PASSWORD")
+
+        if not sender_password:
+            print("GMAIL_APP_PASSWORD 환경변수가 없습니다.")
             return False
-        
-        # SendGrid API 호출
-        url = "https://api.sendgrid.com/v3/mail/send"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
-        
-        data = {
-            "personalizations": [
-                {
-                    "to": [{"email": to_email}],
-                    "subject": subject
-                }
-            ],
-            "from": {
-                "email": "winnersketch.kr@gmail.com",
-                "name": "위너스케치"
-            },
-            "content": [
-                {
-                    "type": "text/html",
-                    "value": html_content
-                }
-            ]
-        }
-        
-        response = requests.post(url, headers=headers, json=data, timeout=10)
-        
-        if response.status_code == 202:
-            print(f"[메일발송성공] {to_email}")
-            return True
-        else:
-            print(f"[메일발송실패] Status: {response.status_code}, Response: {response.text}")
-            return False
-            
+
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = str(Header(subject, "utf-8"))
+        msg["From"] = formataddr((str(Header("위너스케치", "utf-8")), sender_email))
+        msg["To"] = to_email
+        msg.attach(MIMEText(html_content, "html", "utf-8"))
+
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, [to_email], msg.as_bytes())
+
+        print(f"[메일발송성공] {to_email}")
+        return True
+
     except Exception as e:
         print(f"[메일발송실패] {e}")
-        import traceback
-        traceback.print_exc()
         return False
+
 def parse_api_response(response):
     try:
         data = response.json()
@@ -337,14 +319,14 @@ def job_send_daily_emails():
             html_body += f"""
                 </ul>
                 <div style="background:#f8fafc; padding:15px; border-radius:8px; font-size:12px; color:#64748b; text-align:center; margin-top:30px;">
-                    본 메일은 정보통신망법 준수를 위해 (광고) 표시가 포함될 수 있습니다.<br>
+                    본 메일은 위너스케치 구독 서비스에 신청하신 고객님께 제공되는 정보 알림입니다.<br>
                     더 이상 알림을 원치 않으시거나 조건을 변경하시려면 아래 링크를 클릭하세요.<br>
                     <a href="{manage_link}" style="color:#2563EB; font-weight:bold; text-decoration:underline;">[설정 변경 및 수신거부]</a>
                 </div>
             </div>
             """
             
-            subject = f"(광고) [위너스케치] 고객님을 위한 {len(user_items)}건의 새로운 공고가 도착했습니다."
+            subject = f"[위너스케치] 고객님을 위한 {len(user_items)}건의 새로운 공고가 도착했습니다."
             send_email(user['email'], subject, html_body)
 
     conn.close()
