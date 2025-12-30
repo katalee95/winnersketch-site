@@ -255,7 +255,7 @@ def get_competition_data(keyword, rows=100, strict_mode=False, days=30):
 
 def job_send_daily_emails():
     """매일 아침 실행되어 조건에 맞는 공고를 메일로 발송"""
-    print(f"[{datetime.now()}] 스케줄러 시작: 일일 구독 메일 발송")
+    print(f"[{datetime.now()}] 스케줄러 시작: 일일 알림 메일 발송")
     
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
@@ -319,7 +319,7 @@ def job_send_daily_emails():
             html_body += f"""
                 </ul>
                 <div style="background:#f8fafc; padding:15px; border-radius:8px; font-size:12px; color:#64748b; text-align:center; margin-top:30px;">
-                    본 메일은 위너스케치 구독 서비스에 신청하신 고객님께 제공되는 정보 알림입니다.<br>
+                    본 메일은 위너스케치  서비스에 신청하신 고객님께 제공되는 정보 알림입니다.<br>
                     더 이상 알림을 원치 않으시거나 조건을 변경하시려면 아래 링크를 클릭하세요.<br>
                     <a href="{manage_link}" style="color:#2563EB; font-weight:bold; text-decoration:underline;">[설정 변경 및 수신거부]</a>
                 </div>
@@ -522,7 +522,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                                 <p class="text-blue-100 text-sm">설정하신 금액대의 공고가 뜨면<br>메일로 알려드립니다.</p>
                             </div>
                             <div class="mt-4 text-right">
-                                <span class="bg-white/20 px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm">구독하기 &rarr;</span>
+                                <span class="bg-white/20 px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm">알림받기 &rarr;</span>
                             </div>
                         </div>
                     </div>
@@ -1229,15 +1229,30 @@ HTML_PAGE = r"""<!DOCTYPE html>
                     </div>
                 </div>
                 
-                <div class="bg-slate-50 p-3 rounded-lg flex items-start gap-2 mt-2">
-                    <input type="checkbox" id="subConsent" class="mt-1 w-4 h-4 text-blue-600">
-                    <label for="subConsent" class="text-xs text-slate-500 leading-snug cursor-pointer select-none">
-                        <strong>(필수)</strong> 개인정보 수집 및 광고성 정보 수신에 동의합니다. 수집된 이메일은 맞춤 공고 알림 발송 용도로만 사용되며, 메일 하단 링크를 통해 언제든 수신 거부할 수 있습니다.
-                    </label>
+                <div class="space-y-2 mt-2">
+                    <!-- 1) 필수 동의 (알림 목적) -->
+                    <div class="bg-slate-50 p-3 rounded-lg flex items-start gap-2">
+                        <input type="checkbox" id="subConsentRequired" class="mt-1 w-4 h-4 text-blue-600" required>
+                        <label for="subConsentRequired" class="text-xs text-slate-600 leading-snug cursor-pointer select-none">
+                            <strong>필수 동의 (알림 목적)</strong><br>
+                            개인정보 수집 및 이용에 동의합니다.<br>
+                            <span class="text-slate-500">수집된 이메일은 맞춤 공고 알림 발송 용도로만 사용됩니다.</span>
+                        </label>
+                    </div>
+
+                    <!-- 2) 선택 동의 (마케팅 목적) -->
+                    <div class="bg-slate-50 p-3 rounded-lg flex items-start gap-2">
+                        <input type="checkbox" id="subConsentMarketing" class="mt-1 w-4 h-4 text-blue-600">
+                        <label for="subConsentMarketing" class="text-xs text-slate-600 leading-snug cursor-pointer select-none">
+                            <strong>선택 동의 (마케팅 목적)</strong><br>
+                            <span class="text-slate-500">[선택] 마케팅 정보 수신에 동의합니다.</span><br>
+                            <span class="text-slate-500">이벤트, 프로모션, 신규 서비스 안내 등 광고성 정보를 이메일로 받아보실 수 있습니다. 언제든지 수신 거부할 수 있습니다.</span>
+                        </label>
+                    </div>
                 </div>
 
                 <button onclick="submitSubscription()" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-black transition shadow-lg mt-2">
-                    무료로 구독하기
+                    무료로 알림받기
                 </button>
             </div>
         </div>
@@ -1547,14 +1562,15 @@ HTML_PAGE = r"""<!DOCTYPE html>
             const email = document.getElementById('subEmail').value;
             const min = document.getElementById('subMin').value * 10000;
             const max = document.getElementById('subMax').value * 10000;
-            const consent = document.getElementById('subConsent').checked;
+            const consentRequired = document.getElementById('subConsentRequired').checked;
+            const marketing = document.getElementById('subConsentMarketing').checked;
 
             if(!email || !email.includes('@')) {
                 alert('유효한 이메일 주소를 입력해주세요.');
                 return;
             }
-            if(!consent) {
-                alert('개인정보 수집 및 정보 수신에 동의해야 합니다.');
+            if(!consentRequired) {
+                alert('필수 동의(알림 목적)에 체크해야 메일을 받을 수 있습니다.');
                 return;
             }
 
@@ -1567,12 +1583,12 @@ HTML_PAGE = r"""<!DOCTYPE html>
                 const resp = await fetch('/api/subscribe', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({email: email, min_fee: min, max_fee: max, marketing: true})
+                    body: JSON.stringify({email: email, min_fee: min, max_fee: max, marketing: marketing})
                 });
                 const data = await resp.json();
                 
                 if(data.success) {
-                    alert('구독이 완료되었습니다! 입력하신 이메일로 확인 메일을 보냈습니다.');
+                    alert('알림설정이 완료되었습니다! 입력하신 이메일로 확인 메일을 보냈습니다.');
                     document.getElementById('sub-modal').classList.add('hidden');
                 } else {
                     alert('오류: ' + data.msg);
@@ -1782,17 +1798,17 @@ def api_subscribe():
         conn.close()
         
         manage_link = f"https://www.winnersketch.kr/manage/{token}"
-        send_email(email, "[위너스케치] 구독이 완료되었습니다.", 
+        send_email(email, "[위너스케치] 알림설정이 완료되었습니다.", 
                    f"""
                    <h2>환영합니다!</h2>
-                   <p>위너스케치 공모 알림 구독이 완료되었습니다.</p>
+                   <p>위너스케치 공모 알림 설정이 완료되었습니다.</p>
                    <p>설정하신 조건: <strong>{min_fee//10000}만 ~ {max_fee//10000}만원</strong></p>
                    <p>내일부터 매일 아침 08:30에 조건에 맞는 새로운 공고를 보내드립니다.</p>
                    <hr>
-                   <a href='{manage_link}'>구독 설정 관리하기</a>
+                   <a href='{manage_link}'>알림 설정 관리하기</a>
                    """)
         
-        return jsonify({"success": True, "msg": "구독이 완료되었습니다."})
+        return jsonify({"success": True, "msg": "알림설정이 완료되었습니다."})
     except Exception as e:
         return jsonify({"success": False, "msg": str(e)})
 
@@ -1814,12 +1830,12 @@ def manage_page(token):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>구독 관리</title>
+        <title>알림 관리</title>
         <script src="https://cdn.tailwindcss.com"></script>
     </head>
     <body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
         <div class="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full">
-            <h2 class="text-2xl font-bold mb-6 text-slate-800">구독 설정 변경</h2>
+            <h2 class="text-2xl font-bold mb-6 text-slate-800">알림 설정 변경</h2>
             <div class="mb-6 p-4 bg-blue-50 text-blue-800 rounded-lg text-sm">
                 현재 이메일: <strong>{user['email']}</strong>
             </div>
@@ -1839,10 +1855,10 @@ def manage_page(token):
             
             <hr class="my-8">
             
-            <form action="/api/unsubscribe" method="POST" onsubmit="return confirm('정말 구독을 취소하시겠습니까?');">
+            <form action="/api/unsubscribe" method="POST" onsubmit="return confirm('정말 알림을 취소하시겠습니까?');">
                 <input type="hidden" name="token" value="{token}">
                 <button type="submit" class="w-full text-red-500 text-sm font-bold hover:underline">
-                    더 이상 메일을 받지 않겠습니다 (구독 취소)
+                    더 이상 메일을 받지 않겠습니다 (알림 취소)
                 </button>
             </form>
             
@@ -1875,7 +1891,7 @@ def unsubscribe():
     conn.close()
     return """
     <div style="text-align:center; padding-top:50px;">
-        <h2>구독이 취소되었습니다.</h2>
+        <h2>알림이 취소되었습니다.</h2>
         <p>그동안 이용해주셔서 감사합니다.</p>
         <a href="/">홈으로 가기</a>
     </div>
